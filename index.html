@@ -3,1420 +3,699 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>心理咨询预约系统 · 终极版</title>
+  <title>心理咨询预约系统 · 最终美化版</title>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 16px;
-      -webkit-tap-highlight-color: transparent;
+      display: flex; justify-content: center; align-items: flex-start;
+      min-height: 100vh; padding: 16px; -webkit-tap-highlight-color: transparent;
     }
     .app-container {
-      width: 100%;
-      max-width: 540px;
-      background: #ffffff;
-      border-radius: 32px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-      padding: 24px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin: 10px 0;
+      width: 100%; max-width: 540px; background: #ffffff; border-radius: 32px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.06); padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 20px; margin: 10px 0;
     }
-    h2 {
-      font-size: 1.7rem;
-      font-weight: 650;
-      color: #0f172a;
-      letter-spacing: -0.5px;
-    }
-    h3 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #334155;
-      margin-bottom: 8px;
-    }
+    h2 { font-size: 1.7rem; font-weight: 650; color: #0f172a; }
+    h3 { font-size: 1.1rem; font-weight: 600; color: #334155; margin-bottom: 8px; }
     .role-badge {
-      font-size: 0.85rem;
-      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-      color: #3730a3;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-weight: 500;
+      font-size: 0.85rem; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      color: #3730a3; padding: 6px 14px; border-radius: 20px; font-weight: 500;
     }
-
-    /* ========== 统一按钮系统 ========== */
     button {
-      font-family: inherit;
-      font-size: 16px;
-      min-height: 48px;
-      border-radius: 14px;
-      padding: 12px 20px;
-      width: 100%;
-      margin: 5px 0;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      letter-spacing: 0.3px;
+      font-family: inherit; font-size: 16px; min-height: 48px; border-radius: 14px;
+      padding: 12px 20px; width: 100%; margin: 5px 0; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      position: relative;
-      overflow: hidden;
     }
-    button:active {
-      transform: scale(0.96);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
-    /* 主按钮 - 蓝紫渐变 */
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-    .btn-primary:active {
-      background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-    }
-
-    /* 危险按钮 - 浅红底红字 */
-    .btn-danger {
-      background: #fee2e2;
-      color: #dc2626;
-      border: 1px solid #fecaca;
-      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08);
-    }
-    .btn-danger:active {
-      background: #fecaca;
-      box-shadow: 0 1px 4px rgba(220, 38, 38, 0.15);
-    }
-
-    /* 灰色次要按钮 - 浅灰底黑字 */
-    .btn-gray {
-      background: #e5e7eb;
-      color: #1f2937;
-      border: 1px solid #d1d5db;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .btn-gray:active {
-      background: #d1d5db;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
-
-    /* 成功导出按钮 - 绿色 */
-    .btn-success {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-    }
-    .btn-success:active {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
-    }
-
-    /* 输入框、选择框、文本域 */
+    button:active { transform: scale(0.96); }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .btn-danger { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    .btn-gray { background: #e5e7eb; color: #1f2937; border: 1px solid #d1d5db; }
+    .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+    .btn-sm { min-height: 36px; padding: 8px 14px; font-size: 14px; width: auto; }
     input, select, textarea {
-      font-family: inherit;
-      font-size: 16px;
-      min-height: 48px;
-      border-radius: 14px;
-      border: 1.5px solid #e2e8f0;
-      padding: 10px 16px;
-      background: #f9fafb;
-      width: 100%;
-      margin: 5px 0;
-      transition: all 0.2s;
+      font-family: inherit; font-size: 16px; min-height: 48px; border-radius: 14px;
+      border: 1.5px solid #e2e8f0; padding: 10px 16px; background: #f9fafb;
+      width: 100%; margin: 5px 0; transition: all 0.2s;
     }
     input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      background: #ffffff;
+      outline: none; border-color: #667eea; background: #ffffff;
     }
 
-    .card {
-      background: #f8fafc;
-      border-radius: 20px;
-      padding: 18px;
-      border: 1px solid #e9eef3;
+    /* ========== 自定义日期输入框 ========== */
+    .custom-date-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 120px;
     }
-    .grid-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-height: 500px;
-      overflow-y: auto;
+    .custom-date-wrapper input[type="date"] {
+      color: transparent;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
     }
+    .custom-date-wrapper input[type="date"]:valid,
+    .custom-date-wrapper input[type="date"]:focus {
+      color: #1e293b;
+    }
+    .custom-date-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      right: 12px;
+      z-index: 2;
+      cursor: pointer;
+    }
+    /* 隐藏默认的日期文字占位 */
+    .custom-date-wrapper input[type="date"]::-webkit-datetime-edit-text,
+    .custom-date-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    .custom-date-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    .custom-date-wrapper input[type="date"]::-webkit-datetime-edit-year-field {
+      color: transparent;
+    }
+    .custom-date-wrapper input[type="date"]:valid::-webkit-datetime-edit-text,
+    .custom-date-wrapper input[type="date"]:valid::-webkit-datetime-edit-month-field,
+    .custom-date-wrapper input[type="date"]:valid::-webkit-datetime-edit-day-field,
+    .custom-date-wrapper input[type="date"]:valid::-webkit-datetime-edit-year-field,
+    .custom-date-wrapper input[type="date"]:focus::-webkit-datetime-edit-text,
+    .custom-date-wrapper input[type="date"]:focus::-webkit-datetime-edit-month-field,
+    .custom-date-wrapper input[type="date"]:focus::-webkit-datetime-edit-day-field,
+    .custom-date-wrapper input[type="date"]:focus::-webkit-datetime-edit-year-field {
+      color: #1e293b;
+    }
+    .custom-date-placeholder {
+      position: absolute;
+      left: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-size: 16px;
+      pointer-events: none;
+      z-index: 0;
+      transition: opacity 0.2s;
+      background: transparent;
+      padding-right: 4px;
+    }
+    .custom-date-wrapper input[type="date"]:valid ~ .custom-date-placeholder,
+    .custom-date-wrapper input[type="date"]:focus ~ .custom-date-placeholder {
+      opacity: 0;
+    }
+
+    .card { background: #f8fafc; border-radius: 20px; padding: 18px; border: 1px solid #e9eef3; }
+    .grid-list { display: flex; flex-direction: column; gap: 10px; max-height: 500px; overflow-y: auto; }
     .appointment-row {
-      background: white;
-      border-radius: 16px;
-      padding: 14px 16px;
-      border: 1px solid #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      background: white; border-radius: 16px; padding: 14px 16px;
+      border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;
     }
-    .row-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .status-badge {
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 16px;
-      white-space: nowrap;
-    }
+    .row-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .status-badge { font-size: 0.8rem; font-weight: 600; padding: 4px 12px; border-radius: 16px; white-space: nowrap; }
     .status-badge.wait { background: #dbeafe; color: #1e40af; }
     .status-badge.finish { background: #dcfce7; color: #166534; }
     .status-badge.cancel { background: #fee2e2; color: #991b1b; }
-    .time-range {
-      font-size: 0.85rem;
-      color: #64748b;
-      font-weight: 500;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .btn-group button {
-      flex: 1;
-      min-width: 80px;
-    }
-
+    .time-range { font-size: 0.85rem; color: #64748b; font-weight: 500; }
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-group button { flex: 1; min-width: 80px; }
+    .inline-group { display: flex; gap: 8px; align-items: center; }
+    .inline-group select { flex: 1; }
     .modal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      backdrop-filter: blur(4px);
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex; align-items: center;
+      justify-content: center; z-index: 1000; backdrop-filter: blur(4px);
     }
     .modal-content {
-      background: white;
-      width: 92%;
-      max-width: 440px;
-      border-radius: 24px;
-      padding: 24px;
-      max-height: 85vh;
-      overflow-y: auto;
+      background: white; width: 92%; max-width: 440px; border-radius: 24px;
+      padding: 24px; max-height: 85vh; overflow-y: auto;
       box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: modalIn 0.25s ease-out;
     }
-
-    .admin-table {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid #e2e8f0;
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
     }
+    .admin-table { background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
     .table-header, .table-row {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr 0.8fr 1.2fr;
-      padding: 12px 10px;
-      gap: 4px;
-      font-size: 0.85rem;
-      align-items: center;
+      display: grid; grid-template-columns: 1.5fr 1fr 0.8fr 1.2fr;
+      padding: 12px 10px; gap: 4px; font-size: 0.85rem; align-items: center;
     }
-    .table-header {
-      background: #f1f5f9;
-      font-weight: 600;
-      color: #475569;
+    .table-header { background: #f1f5f9; font-weight: 600; color: #475569; }
+    .table-row { border-bottom: 1px solid #f1f5f9; }
+    .section-divider { border-top: 2px dashed #e2e8f0; margin: 16px 0; padding-top: 16px; }
+    .warning-text { color: #dc2626; font-size: 0.85rem; margin-top: 4px; }
+    
+    /* 筛选器样式 */
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+    .filter-row > * { flex: 1; min-width: 100px; }
+    .filter-row-full { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+    .filter-row-full > * { flex: 1; min-width: 100px; }
+    
+    .stat-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 0.75rem; font-weight: 600; margin-left: 4px;
     }
-    .table-row {
-      border-bottom: 1px solid #f1f5f9;
+    .stat-wait { background: #dbeafe; color: #1e40af; }
+    .stat-finish { background: #dcfce7; color: #166534; }
+    .stat-cancel { background: #fee2e2; color: #991b1b; }
+
+    /* 气泡提示 */
+    .toast-container {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: rgba(30, 41, 59, 0.92); color: white;
+      padding: 12px 24px; border-radius: 25px; font-size: 0.9rem;
+      font-weight: 500; text-align: center; white-space: nowrap;
+      backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      animation: toastIn 0.4s ease-out, toastOut 0.4s ease-in 2s forwards;
+      pointer-events: auto;
+    }
+    .toast.success { background: rgba(16, 185, 129, 0.92); }
+    .toast.error { background: rgba(220, 38, 38, 0.92); }
+    .toast.warning { background: rgba(245, 158, 11, 0.92); }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-10px); }
     }
 
-    /* 时间选择器样式 */
-    .time-picker-group {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .time-picker-group select {
-      flex: 1;
-    }
+    .date-display { font-weight: 600; color: #1e293b; }
+    .date-display .weekday { font-size: 0.8rem; color: #64748b; margin-left: 4px; }
   </style>
 </head>
 <body>
 <div class="app-container" id="app"></div>
+<div class="toast-container" id="toastContainer"></div>
 
 <script>
   (function() {
-    // 存储键
-    const STORAGE_USERS = 'psy_users_v4';
-    const STORAGE_CONSULTANTS = 'psy_consultants_v4';
-    const STORAGE_APPOINTMENTS = 'psy_appointments_v4';
-    const STORAGE_PROFILES = 'psy_profiles_v4';
-    const STORAGE_CURRENT = 'psy_current_v4';
+    const DB = {
+      users: 'psy_u_f3', consultants: 'psy_c_f3', appointments: 'psy_a_f3', 
+      profiles: 'psy_p_f3', current: 'psy_cur_f3', draft: 'psy_draft_f3'
+    };
 
-    // 初始化数据
-    function initData() {
-      if (!localStorage.getItem(STORAGE_USERS)) {
-        localStorage.setItem(STORAGE_USERS, JSON.stringify([
-          { username: 'user1', password: '123456', remaining: 5 }
-        ]));
-      }
-      if (!localStorage.getItem(STORAGE_CONSULTANTS)) {
-        localStorage.setItem(STORAGE_CONSULTANTS, JSON.stringify([
-          { id: 'c1', account: 'wang01', name: '王咨询师', intro: '情绪管理专家', password: '123456' },
-          { id: 'c2', account: 'li01', name: '李咨询师', intro: '家庭关系咨询', password: '123456' },
-          { id: 'c3', account: 'zhang01', name: '张咨询师', intro: '职业发展规划', password: '123456' }
-        ]));
-      }
-      if (!localStorage.getItem(STORAGE_APPOINTMENTS)) {
-        localStorage.setItem(STORAGE_APPOINTMENTS, JSON.stringify([]));
-      }
-      if (!localStorage.getItem(STORAGE_PROFILES)) {
-        localStorage.setItem(STORAGE_PROFILES, JSON.stringify([]));
-      }
+    function showToast(message, type = '') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => { if(toast.parentNode) toast.remove(); }, 2500);
+    }
+    window.alert = function(msg) { showToast(msg, 'warning'); };
+
+    function formatDateNice(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T00:00:00');
+      const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      const wd = weekdays[d.getDay()];
+      return `${m}月${day}日 <span class="weekday">${wd}</span>`;
     }
 
-    // 工具函数
-    const getUsers = () => JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-    const saveUsers = (d) => localStorage.setItem(STORAGE_USERS, JSON.stringify(d));
-    const getConsultants = () => JSON.parse(localStorage.getItem(STORAGE_CONSULTANTS) || '[]');
-    const saveConsultants = (d) => localStorage.setItem(STORAGE_CONSULTANTS, JSON.stringify(d));
-    const getAppointments = () => JSON.parse(localStorage.getItem(STORAGE_APPOINTMENTS) || '[]');
-    const saveAppointments = (d) => localStorage.setItem(STORAGE_APPOINTMENTS, JSON.stringify(d));
-    const getProfiles = () => JSON.parse(localStorage.getItem(STORAGE_PROFILES) || '[]');
-    const saveProfiles = (d) => localStorage.setItem(STORAGE_PROFILES, JSON.stringify(d));
-    const todayStr = () => new Date().toISOString().split('T')[0];
+    function init() {
+      if (!localStorage.getItem(DB.users)) localStorage.setItem(DB.users, JSON.stringify([
+        { username: 'user1', password: '123456', remaining: 5 }
+      ]));
+      if (!localStorage.getItem(DB.consultants)) localStorage.setItem(DB.consultants, JSON.stringify([
+        { id: 'c1', account: 'wang01', name: '王咨询师', intro: '情绪管理专家', password: '123456' },
+        { id: 'c2', account: 'li01', name: '李咨询师', intro: '家庭关系咨询', password: '123456' },
+        { id: 'c3', account: 'zhang01', name: '张咨询师', intro: '职业发展规划', password: '123456' }
+      ]));
+      if (!localStorage.getItem(DB.appointments)) localStorage.setItem(DB.appointments, JSON.stringify([]));
+      if (!localStorage.getItem(DB.profiles)) localStorage.setItem(DB.profiles, JSON.stringify([]));
+    }
 
-    // 生成时间段选项（9:00-20:00，每30分钟一个选项，实际预约1小时）
-    function getTimeSlots(selectedDate) {
-      const slots = [];
-      const now = new Date();
-      const isToday = selectedDate === todayStr();
-      
-      for (let hour = 9; hour < 20; hour++) {
-        for (let min = 0; min < 60; min += 30) {
-          const timeStr = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-          const endTime = new Date(2026, 0, 1, hour, min + 60);
-          const endTimeStr = `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
-          
-          // 如果是今天，过滤已过去的时间
-          if (isToday) {
-            const slotTime = hour * 60 + min;
-            const currentTime = now.getHours() * 60 + now.getMinutes();
-            if (slotTime <= currentTime) continue;
-          }
-          
-          slots.push({
-            value: timeStr,
-            label: `${timeStr} - ${endTimeStr}`,
-            hour: hour,
-            minute: min
-          });
+    const g = (k) => JSON.parse(localStorage.getItem(k) || '[]');
+    const s = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+    const today = () => new Date().toISOString().split('T')[0];
+    const getCur = () => JSON.parse(localStorage.getItem(DB.current));
+    const setCur = (u) => localStorage.setItem(DB.current, JSON.stringify(u));
+    const logout = () => { localStorage.removeItem(DB.current); renderLogin(); };
+
+    function saveDraft(data) { s(DB.draft, data); }
+    function getDraft() { return JSON.parse(localStorage.getItem(DB.draft) || '{}'); }
+    function clearDraft() { localStorage.removeItem(DB.draft); }
+
+    function returnRemaining(username) {
+      const users = g(DB.users); const user = users.find(u => u.username === username);
+      if (user) { user.remaining += 1; s(DB.users, users); return true; }
+      return false;
+    }
+    function deductRemaining(username) {
+      const users = g(DB.users); const user = users.find(u => u.username === username);
+      if (user && user.remaining > 0) { user.remaining -= 1; s(DB.users, users); return true; }
+      return false;
+    }
+
+    function getTimeSlots(date) {
+      const slots = []; const now = new Date(); const isToday = date === today();
+      for (let h = 9; h < 20; h++) {
+        for (let m = 0; m < 60; m += 30) {
+          const time = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+          const endH = h + Math.floor((m+60)/60); const endM = (m+60)%60;
+          const endTime = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+          if (isToday && (h*60+m) <= (now.getHours()*60+now.getMinutes())) continue;
+          slots.push({ value: time, label: `${time} - ${endTime}` });
         }
       }
       return slots;
     }
 
-    // 自动完成过期预约
+    function getEndTime(t) {
+      const [h,m] = t.split(':').map(Number);
+      const eh = h + Math.floor((m+60)/60); const em = (m+60)%60;
+      return `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`;
+    }
+
+    function conflict(cid, date, time, excludeId) {
+      const [nh,nm] = time.split(':').map(Number); const ns = nh*60+nm; const ne = ns+60;
+      return g(DB.appointments).some(a => {
+        if (a.consultantId !== cid || a.date !== date || a.id === excludeId) return false;
+        if (a.status === 'cancel' || a.status === 'finish') return false;
+        const [eh,em] = a.time.split(':').map(Number); const es = eh*60+em; const ee = es+60;
+        return ns < ee && ne > es;
+      });
+    }
+
     function autoComplete() {
-      let apps = getAppointments();
-      const now = new Date();
-      const today = todayStr();
-      let changed = false;
-      
-      apps = apps.map(a => {
+      const apps = g(DB.appointments); const now = new Date(); const td = today(); let changed = false;
+      const updated = apps.map(a => {
         if (a.status !== 'wait') return a;
-        const [appHour, appMin] = a.time.split(':').map(Number);
-        const appEndHour = appHour + 1;
-        
-        if (a.date < today) {
-          changed = true;
-          return { ...a, status: 'finish' };
-        } else if (a.date === today) {
-          const currentMinutes = now.getHours() * 60 + now.getMinutes();
-          const appEndMinutes = appEndHour * 60;
-          if (currentMinutes >= appEndMinutes) {
-            changed = true;
-            return { ...a, status: 'finish' };
-          }
+        const [h] = a.time.split(':').map(Number); const endMin = (h+1)*60;
+        if (a.date < td || (a.date === td && now.getHours()*60+now.getMinutes() >= endMin)) {
+          changed = true; return { ...a, status: 'finish' };
         }
         return a;
       });
-      
-      if (changed) saveAppointments(apps);
+      if (changed) s(DB.appointments, updated);
     }
 
-    // 冲突检查
-    function isConflict(consultantId, date, time, excludeId = null) {
-      const [newHour, newMin] = time.split(':').map(Number);
-      const newStart = newHour * 60 + newMin;
-      const newEnd = newStart + 60;
-      
-      return getAppointments().some(a => {
-        if (a.consultantId !== consultantId || a.date !== date) return false;
-        if (a.status === 'cancel' || a.status === 'finish') return false;
-        if (a.id === excludeId) return false;
-        
-        const [existHour, existMin] = a.time.split(':').map(Number);
-        const existStart = existHour * 60 + existMin;
-        const existEnd = existStart + 60;
-        
-        return (newStart < existEnd && newEnd > existStart);
+    function buildProfileOptions(profiles, selectedId = '') {
+      let html = '<option value="">选择来访者档案（可选）</option>';
+      profiles.forEach(p => {
+        html += `<option value="${p.id}" ${p.id===selectedId?'selected':''}>${p.name} ${p.phone}</option>`;
       });
+      html += '<option value="__new__" style="color:#667eea;font-weight:600;">➕ 新增档案...</option>';
+      return html;
     }
 
-    function getEndTime(timeStr) {
-      const [h, m] = timeStr.split(':').map(Number);
-      const endDate = new Date(2026, 0, 1, h, m + 60);
-      return `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
-    }
-
-    // 当前用户
-    const getCurrentUser = () => JSON.parse(localStorage.getItem(STORAGE_CURRENT));
-    const setCurrentUser = (u) => localStorage.setItem(STORAGE_CURRENT, JSON.stringify(u));
-    const logout = () => { localStorage.removeItem(STORAGE_CURRENT); renderLogin(); };
-
-    // ========== 统一登录 ==========
+    // ========== 登录 ==========
     function renderLogin() {
       appEl.innerHTML = `
-        <div style="text-align:center; margin-top:20px;">
-          <h2>🧠 心理咨询预约</h2>
-          <p style="color:#64748b; margin-top:8px;">专业心理健康服务平台</p>
-        </div>
-        <input id="loginUser" placeholder="用户名" autocomplete="off">
-        <input id="loginPass" type="password" placeholder="密码">
+        <div style="text-align:center;margin-top:20px;"><h2>🧠 心理咨询预约</h2><p style="color:#64748b;">全功能管理平台</p></div>
+        <input id="lu" placeholder="用户名"><input id="lp" type="password" placeholder="密码">
         <button class="btn-primary" id="loginBtn">登 录</button>
-        <p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:12px;">
-          系统自动识别角色 · 安全登录
-        </p>
-      `;
+        <p style="font-size:0.8rem;color:#94a3b8;text-align:center;margin-top:12px;">
+          admin/admin123 | user1/123456 | wang01/123456
+        </p>`;
       document.getElementById('loginBtn').onclick = () => {
-        const username = document.getElementById('loginUser').value.trim();
-        const password = document.getElementById('loginPass').value.trim();
-        if (!username || !password) return alert('请输入用户名和密码');
-        
-        if (username === 'admin' && password === 'admin123') {
-          setCurrentUser({ role: 'admin', username: 'admin' });
-          renderAdminDashboard();
-          return;
-        }
-        
-        const consultant = getConsultants().find(c => c.account === username && c.password === password);
-        if (consultant) {
-          setCurrentUser({ role: 'consultant', id: consultant.id, name: consultant.name, account: consultant.account });
-          renderConsultant();
-          return;
-        }
-        
-        const user = getUsers().find(u => u.username === username && u.password === password);
-        if (user) {
-          setCurrentUser({ role: 'visitor', username: user.username });
-          renderVisitor();
-          return;
-        }
-        
-        alert('账号或密码错误，请重试');
+        const u = document.getElementById('lu').value.trim(), p = document.getElementById('lp').value.trim();
+        if (!u || !p) { showToast('请输入用户名和密码', 'warning'); return; }
+        if (u === 'admin' && p === 'admin123') { setCur({role:'admin'}); renderAdmin(); return; }
+        const c = g(DB.consultants).find(x => x.account === u && x.password === p);
+        if (c) { setCur({role:'consultant', id:c.id, name:c.name}); renderConsultant(); return; }
+        const usr = g(DB.users).find(x => x.username === u && x.password === p);
+        if (usr) { setCur({role:'visitor', username:usr.username}); renderVisitor(); return; }
+        showToast('账号或密码错误', 'error');
       };
     }
 
-    // ========== 来访者界面 ==========
+    // ========== 来访者 ==========
     function renderVisitor() {
-      autoComplete();
-      const cur = getCurrentUser();
-      const userData = getUsers().find(u => u.username === cur.username);
-      if (!userData) { alert('用户数据异常'); logout(); return; }
-      
-      const profiles = getProfiles().filter(p => p.owner === cur.username);
-      const myApps = getAppointments().filter(a => a.visitor === cur.username);
-      const timeSlots = getTimeSlots(todayStr());
-      
-      appEl.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2>📅 我的预约</h2>
-          <span class="role-badge">剩余 ${userData.remaining} 次</span>
-        </div>
-        
-        <div class="card">
-          <h3>新建预约</h3>
-          <input type="date" id="appDate" min="${todayStr()}" value="${todayStr()}">
-          <select id="appTime">
-            <option value="">请选择时间段</option>
-            ${timeSlots.map(s => `<option value="${s.value}">${s.label}</option>`).join('')}
-          </select>
-          <select id="appConsultant">
-            <option value="">请选择咨询师</option>
-            ${getConsultants().map(c => `<option value="${c.id}">${c.name} - ${c.intro}</option>`).join('')}
-          </select>
-          <select id="appProfile">
-            <option value="">选择来访者档案（可选）</option>
-            ${profiles.map(p => `<option value="${p.id}">${p.name} ${p.phone}</option>`).join('')}
-          </select>
-          <textarea id="appNote" placeholder="备注（选填）" rows="2"></textarea>
-          <button class="btn-primary" id="submitBtn" ${userData.remaining <= 0 ? 'disabled' : ''}>
-            ${userData.remaining <= 0 ? '次数已用完' : '✅ 确认预约'}
-          </button>
-        </div>
-
-        <h3>待咨询列表</h3>
-        <div class="grid-list" id="waitList"></div>
-        
-        <div class="btn-group">
-          <button class="btn-gray" id="recordsBtn">📋 我的记录</button>
-          <button class="btn-gray" id="profileBtn">👤 档案管理</button>
-          <button class="btn-gray" id="centerBtn">⚙️ 个人中心</button>
-        </div>
-        <button class="btn-danger" id="logoutBtn">退出登录</button>
-      `;
-
-      // 日期变化更新时段
-      document.getElementById('appDate').onchange = function() {
-        const slots = getTimeSlots(this.value);
-        const timeSel = document.getElementById('appTime');
-        timeSel.innerHTML = '<option value="">请选择时间段</option>' + 
-          slots.map(s => `<option value="${s.value}">${s.label}</option>`).join('');
-      };
-
-      function renderWaitList() {
-        const waitApps = myApps.filter(a => a.status === 'wait');
-        document.getElementById('waitList').innerHTML = waitApps.length === 0 ? 
-          '<p style="color:#94a3b8; text-align:center; padding:20px;">暂无待咨询预约</p>' :
-          waitApps.map(a => {
-            const consultant = getConsultants().find(c => c.id === a.consultantId);
-            const endTime = getEndTime(a.time);
-            return `
-              <div class="appointment-row">
-                <div class="row-top">
-                  <div>
-                    <b>${a.date}</b>
-                    <div class="time-range">${a.time} - ${endTime}</div>
-                  </div>
-                  <span class="status-badge wait">待咨询</span>
-                </div>
-                <div>咨询师: ${consultant?.name || '未知'} | ${a.profileName || '未指定档案'}</div>
-                ${a.note ? `<div style="color:#64748b; font-size:0.9rem;">备注: ${a.note}</div>` : ''}
-                <button class="btn-gray" onclick="window.rescheduleApp('${a.id}')">✏️ 改签</button>
-              </div>
-            `;
-          }).join('');
-      }
-      
-      renderWaitList();
-
-      document.getElementById('submitBtn').onclick = function() {
-        const date = document.getElementById('appDate').value;
-        const time = document.getElementById('appTime').value;
-        const consultantId = document.getElementById('appConsultant').value;
-        const profileId = document.getElementById('appProfile').value;
-        const note = document.getElementById('appNote').value;
-        
-        if (!date || !time || !consultantId) {
-          return alert('请填写完整的预约信息');
-        }
-        
-        if (userData.remaining <= 0) {
-          return alert('预约次数已用完');
-        }
-        
-        if (isConflict(consultantId, date, time)) {
-          return alert('该时段与已有预约冲突，请选择其他时间');
-        }
-        
-        const profile = profiles.find(p => p.id === profileId);
-        const newApp = {
-          id: Date.now().toString(),
-          visitor: cur.username,
-          consultantId: consultantId,
-          date: date,
-          time: time,
-          profileName: profile ? `${profile.name} ${profile.phone}` : '',
-          note: note,
-          status: 'wait'
-        };
-        
-        const apps = getAppointments();
-        apps.push(newApp);
-        saveAppointments(apps);
-        
-        userData.remaining -= 1;
-        const allUsers = getUsers();
-        const userIndex = allUsers.findIndex(u => u.username === cur.username);
-        allUsers[userIndex] = userData;
-        saveUsers(allUsers);
-        
-        renderVisitor();
-      };
-
-      document.getElementById('recordsBtn').onclick = renderVisitorRecords;
-      document.getElementById('profileBtn').onclick = renderProfileManager;
-      document.getElementById('centerBtn').onclick = renderVisitorCenter;
-      document.getElementById('logoutBtn').onclick = logout;
-    }
-
-    // 全局改签函数
-    window.rescheduleApp = function(appId) {
-      const app = getAppointments().find(a => a.id === appId);
-      if (!app) return;
-      
-      const timeSlots = getTimeSlots(app.date);
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>✏️ 改签预约</h3>
-          <input type="date" id="reDate" value="${app.date}" min="${todayStr()}">
-          <select id="reTime">
-            ${timeSlots.map(s => `<option value="${s.value}" ${s.value === app.time ? 'selected' : ''}>${s.label}</option>`).join('')}
-          </select>
-          <select id="reConsultant">
-            ${getConsultants().map(c => `<option value="${c.id}" ${c.id === app.consultantId ? 'selected' : ''}>${c.name} - ${c.intro}</option>`).join('')}
-          </select>
-          <textarea id="reNote">${app.note || ''}</textarea>
-          <div class="btn-group">
-            <button class="btn-primary" id="saveReschedule">保存修改</button>
-            <button class="btn-gray" id="cancelReschedule">取消</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      
-      document.getElementById('reDate').onchange = function() {
-        const slots = getTimeSlots(this.value);
-        document.getElementById('reTime').innerHTML = slots.map(s => 
-          `<option value="${s.value}">${s.label}</option>`
-        ).join('');
-      };
-      
-      document.getElementById('cancelReschedule').onclick = () => modal.remove();
-      document.getElementById('saveReschedule').onclick = () => {
-        const newDate = document.getElementById('reDate').value;
-        const newTime = document.getElementById('reTime').value;
-        const newConsultant = document.getElementById('reConsultant').value;
-        const newNote = document.getElementById('reNote').value;
-        
-        if (!newDate || !newTime || !newConsultant) {
-          return alert('请填写完整信息');
-        }
-        
-        if (isConflict(newConsultant, newDate, newTime, appId)) {
-          return alert('该时段已被预约，请选择其他时间');
-        }
-        
-        const apps = getAppointments();
-        const index = apps.findIndex(a => a.id === appId);
-        apps[index] = {
-          ...apps[index],
-          date: newDate,
-          time: newTime,
-          consultantId: newConsultant,
-          note: newNote
-        };
-        saveAppointments(apps);
-        modal.remove();
-        renderVisitor();
-      };
-    };
-
-    function renderVisitorRecords() {
-      const cur = getCurrentUser();
-      const apps = getAppointments().filter(a => a.visitor === cur.username);
+      autoComplete(); const cur = getCur();
+      const user = g(DB.users).find(u => u.username === cur.username);
+      if (!user) { logout(); return; }
+      const profiles = g(DB.profiles).filter(p => p.owner === cur.username);
+      const myApps = g(DB.appointments).filter(a => a.visitor === cur.username);
+      const draft = getDraft();
+      const savedDate = draft.date || today();
+      const savedConsultant = draft.consultantId || '';
+      const savedTime = draft.time || '';
+      const savedNote = draft.note || '';
+      const savedProfileId = draft.profileId || (profiles.length === 1 ? profiles[0].id : '');
       
       appEl.innerHTML = `
-        <h2>📋 我的预约记录</h2>
-        <div class="grid-list">
-          ${apps.length === 0 ? '<p style="text-align:center;color:#94a3b8; padding:20px;">暂无预约记录</p>' :
-            apps.map(a => {
-              const consultant = getConsultants().find(c => c.id === a.consultantId);
-              const endTime = getEndTime(a.time);
-              const statusText = a.status === 'wait' ? '待咨询' : a.status === 'finish' ? '已完成' : '已取消';
-              return `
-                <div class="appointment-row">
-                  <div class="row-top">
-                    <div>
-                      <b>${a.date}</b>
-                      <div class="time-range">${a.time} - ${endTime}</div>
-                    </div>
-                    <span class="status-badge ${a.status}">${statusText}</span>
-                  </div>
-                  <div>咨询师: ${consultant?.name || '未知'} | ${a.profileName || '未指定'}</div>
-                  ${a.note ? `<div style="color:#64748b;">备注: ${a.note}</div>` : ''}
-                  ${a.status === 'wait' ? 
-                    `<button class="btn-danger" onclick="window.cancelAppointment('${a.id}')">取消预约（返还次数）</button>` : 
-                    ''}
-                </div>
-              `;
-            }).join('')
-          }
+        <div style="display:flex;justify-content:space-between;"><h2>📅 我的预约</h2><span class="role-badge">剩余${user.remaining}次</span></div>
+        <div class="card"><h3>新建预约</h3>
+          <input type="date" id="ad" min="${today()}" value="${savedDate}">
+          <select id="at"><option>选时段</option>${getTimeSlots(savedDate).map(s=>`<option value="${s.value}" ${s.value===savedTime?'selected':''}>${s.label}</option>`).join('')}</select>
+          <select id="ac"><option>选咨询师</option>${g(DB.consultants).map(c=>`<option value="${c.id}" ${c.id===savedConsultant?'selected':''}>${c.name}</option>`).join('')}</select>
+          <div class="inline-group"><select id="ap" style="flex:1;">${buildProfileOptions(profiles, savedProfileId)}</select></div>
+          <textarea id="an" placeholder="备注" rows="2">${savedNote}</textarea>
+          <button class="btn-primary" id="submit" ${user.remaining<=0?'disabled':''}>${user.remaining<=0?'次数用完':'✅ 确认预约'}</button>
         </div>
-        <button class="btn-gray" id="backToVisitor">← 返回预约首页</button>
-      `;
+        <h3>待咨询</h3><div id="waitList" class="grid-list"></div>
+        <div class="btn-group"><button class="btn-gray" id="recBtn">记录</button><button class="btn-gray" id="profBtn">档案</button><button class="btn-gray" id="ctrBtn">个人</button></div>
+        <button class="btn-danger" id="outBtn">退出</button>`;
       
-      document.getElementById('backToVisitor').onclick = renderVisitor;
-    }
-
-    window.cancelAppointment = function(appId) {
-      if (!confirm('确定要取消这个预约吗？预约次数将会返还。')) return;
-      
-      const apps = getAppointments();
-      const app = apps.find(a => a.id === appId);
-      if (app && app.status === 'wait') {
-        app.status = 'cancel';
-        saveAppointments(apps);
-        
-        const cur = getCurrentUser();
-        const users = getUsers();
-        const user = users.find(u => u.username === cur.username);
-        if (user) {
-          user.remaining += 1;
-          saveUsers(users);
-        }
-        
-        renderVisitorRecords();
+      function saveCurrentDraft() {
+        const d = { date: document.getElementById('ad')?.value || '', time: document.getElementById('at')?.value || '', consultantId: document.getElementById('ac')?.value || '', profileId: document.getElementById('ap')?.value || '', note: document.getElementById('an')?.value || '' };
+        if (d.profileId === '__new__') d.profileId = '';
+        saveDraft(d);
       }
-    };
+      document.getElementById('ad').onchange = function() { document.getElementById('at').innerHTML = '<option>选时段</option>'+getTimeSlots(this.value).map(x=>`<option value="${x.value}">${x.label}</option>`).join(''); saveCurrentDraft(); };
+      document.getElementById('at').onchange = saveCurrentDraft;
+      document.getElementById('ac').onchange = saveCurrentDraft;
+      document.getElementById('an').oninput = saveCurrentDraft;
+      document.getElementById('ap').onchange = function() { if (this.value === '__new__') { saveCurrentDraft(); renderProfileManager(); } else saveCurrentDraft(); };
+      
+      function showWait() {
+        const w = myApps.filter(a=>a.status==='wait');
+        document.getElementById('waitList').innerHTML = w.length===0?'<p style="color:#94a3b8;text-align:center;padding:20px;">暂无</p>':w.map(a=>{
+          const c = g(DB.consultants).find(x=>x.id===a.consultantId);
+          return `<div class="appointment-row"><div class="row-top"><div><span class="date-display">${formatDateNice(a.date)}</span><div class="time-range">${a.time}-${getEndTime(a.time)}</div></div><span class="status-badge wait">待咨询</span></div><div>${c?.name} | ${a.profileName||''}</div><button class="btn-gray" onclick="reschedule('${a.id}')">✏️ 改签</button></div>`;
+        }).join('');
+      }
+      showWait();
+      
+      document.getElementById('submit').onclick = () => {
+        const d=document.getElementById('ad').value, t=document.getElementById('at').value, cid=document.getElementById('ac').value, pid=document.getElementById('ap').value, note=document.getElementById('an').value;
+        if(!d||!t||!cid) { showToast('请填写完整', 'warning'); return; }
+        if(pid==='__new__') { showToast('请先选择档案', 'warning'); return; }
+        if(conflict(cid,d,t)) { showToast('时段冲突', 'error'); return; }
+        const p = profiles.find(x=>x.id===pid);
+        const apps = g(DB.appointments); apps.push({id:Date.now().toString(),visitor:cur.username,consultantId:cid,date:d,time:t,profileName:p?`${p.name} ${p.phone}`:'',note,status:'wait'});
+        s(DB.appointments,apps); deductRemaining(cur.username); clearDraft();
+        showToast('预约创建成功！', 'success'); renderVisitor();
+      };
+      document.getElementById('recBtn').onclick = ()=>{
+        const apps = g(DB.appointments).filter(a=>a.visitor===cur.username);
+        appEl.innerHTML = `<h2>📋 记录</h2><div class="grid-list">${apps.map(a=>{const c=g(DB.consultants).find(x=>x.id===a.consultantId);return `<div class="appointment-row"><div class="row-top"><div><span class="date-display">${formatDateNice(a.date)}</span><div class="time-range">${a.time}-${getEndTime(a.time)}</div></div><span class="status-badge ${a.status}">${a.status==='wait'?'待':a.status==='finish'?'完':'取消'}</span></div><div>${c?.name} | ${a.profileName||''}</div>${a.status==='wait'?`<button class="btn-danger" onclick="cancelApp('${a.id}')">取消(返还)</button>`:''}</div>`;}).join('')}</div><button class="btn-gray" id="back">←返回</button>`;
+        document.getElementById('back').onclick = renderVisitor;
+      };
+      document.getElementById('profBtn').onclick = () => { saveCurrentDraft(); renderProfileManager(); };
+      document.getElementById('ctrBtn').onclick = ()=>{appEl.innerHTML=`<h2>⚙️ 个人</h2><div class="card"><p>${user.username} 剩余${user.remaining}次</p></div><button class="btn-primary" id="chPwd">修改密码</button><button class="btn-gray" id="back">←返回</button>`;document.getElementById('chPwd').onclick=()=>{const old=prompt('旧密码');if(old!==user.password){showToast('旧密码错误','error');return;}const n1=prompt('新密码(≥4位)');if(!n1||n1.length<4){showToast('至少4位','warning');return;}const users=g(DB.users);users.find(u=>u.username===cur.username).password=n1;s(DB.users,users);showToast('修改成功','success');logout();};document.getElementById('back').onclick=renderVisitor;};
+      document.getElementById('outBtn').onclick = () => { clearDraft(); logout(); };
+    }
 
     function renderProfileManager() {
-      const cur = getCurrentUser();
-      const profiles = getProfiles().filter(p => p.owner === cur.username);
-      
-      appEl.innerHTML = `
-        <h2>👤 来访者档案管理</h2>
-        <div class="card">
-          <h3>新增档案</h3>
-          <input id="pName" placeholder="姓名（必填）">
-          <input id="pPhone" placeholder="手机号（必填）">
-          <textarea id="pNote" placeholder="备注（选填）" rows="2"></textarea>
-          <button class="btn-primary" id="addProfile">➕ 新增档案</button>
-        </div>
-        <div class="grid-list">
-          ${profiles.length === 0 ? '<p style="text-align:center;color:#94a3b8; padding:20px;">暂无档案</p>' :
-            profiles.map(p => `
-              <div class="appointment-row">
-                <div><b>${p.name}</b> | ${p.phone}</div>
-                ${p.note ? `<div style="color:#64748b;">备注: ${p.note}</div>` : ''}
-                <div class="btn-group">
-                  <button class="btn-gray" onclick="window.editProfile('${p.id}')">编辑</button>
-                  <button class="btn-danger" onclick="window.deleteProfile('${p.id}')">删除</button>
-                </div>
-              </div>
-            `).join('')
-          }
-        </div>
-        <button class="btn-gray" id="backToVisitor">← 返回预约首页</button>
-      `;
-      
-      document.getElementById('addProfile').onclick = () => {
-        const name = document.getElementById('pName').value.trim();
-        const phone = document.getElementById('pPhone').value.trim();
-        if (!name || !phone) return alert('姓名和手机号为必填项');
-        
-        const profs = getProfiles();
-        profs.push({
-          id: Date.now().toString(),
-          owner: cur.username,
-          name: name,
-          phone: phone,
-          note: document.getElementById('pNote').value
-        });
-        saveProfiles(profs);
-        renderProfileManager();
-      };
-      
-      document.getElementById('backToVisitor').onclick = renderVisitor;
-    }
-
-    window.editProfile = function(profileId) {
-      const profile = getProfiles().find(p => p.id === profileId);
-      if (!profile) return;
-      
-      const newName = prompt('修改姓名:', profile.name);
-      if (newName === null) return;
-      const newPhone = prompt('修改手机号:', profile.phone);
-      if (newPhone === null) return;
-      
-      if (!newName.trim() || !newPhone.trim()) return alert('姓名和手机号不能为空');
-      
-      const profs = getProfiles();
-      const index = profs.findIndex(p => p.id === profileId);
-      profs[index] = { ...profs[index], name: newName.trim(), phone: newPhone.trim() };
-      saveProfiles(profs);
-      renderProfileManager();
-    };
-
-    window.deleteProfile = function(profileId) {
-      if (!confirm('确定删除这个档案吗？')) return;
-      const profs = getProfiles().filter(p => p.id !== profileId);
-      saveProfiles(profs);
-      renderProfileManager();
-    };
-
-    function renderVisitorCenter() {
-      const cur = getCurrentUser();
-      const userData = getUsers().find(u => u.username === cur.username);
-      
-      appEl.innerHTML = `
-        <h2>⚙️ 个人中心</h2>
-        <div class="card">
-          <p style="font-size:1.1rem;"><b>用户名:</b> ${userData.username}</p>
-          <p style="font-size:1.1rem;"><b>剩余预约次数:</b> ${userData.remaining}</p>
-        </div>
-        <button class="btn-primary" id="changePassBtn">🔑 修改密码</button>
-        <button class="btn-gray" id="backToVisitor">← 返回预约首页</button>
-      `;
-      
-      document.getElementById('changePassBtn').onclick = () => renderChangePassword('visitor');
-      document.getElementById('backToVisitor').onclick = renderVisitor;
-    }
-
-    // 通用密码修改页面
-    function renderChangePassword(role) {
-      const cur = getCurrentUser();
-      let currentPassword = '';
-      
-      if (role === 'visitor') {
-        const userData = getUsers().find(u => u.username === cur.username);
-        currentPassword = userData?.password || '';
-      } else if (role === 'consultant') {
-        const consultant = getConsultants().find(c => c.id === cur.id);
-        currentPassword = consultant?.password || '';
+      const cur = getCur();
+      appEl.innerHTML = `<h2>👤 档案</h2><div class="card"><input id="pName" placeholder="姓名"><input id="pPhone" placeholder="手机"><textarea id="pNote" placeholder="备注" rows="2"></textarea><button class="btn-primary" id="addProfileBtn">➕ 新增</button></div><div class="grid-list" id="profileList"></div><button class="btn-gray" id="backToVisitor">← 返回</button>`;
+      function renderList() {
+        const profs = g(DB.profiles).filter(p => p.owner === cur.username);
+        document.getElementById('profileList').innerHTML = profs.length===0?'<p style="color:#94a3b8;text-align:center;padding:20px;">暂无</p>':profs.map(p=>`<div class="appointment-row"><b>${p.name}</b> ${p.phone}<div class="btn-group"><button class="btn-gray btn-sm" onclick="editProfileModal('${p.id}')">编辑</button><button class="btn-danger btn-sm" onclick="deleteProfile('${p.id}')">删除</button></div></div>`).join('');
       }
-      
-      appEl.innerHTML = `
-        <h2>🔑 修改密码</h2>
-        <div class="card">
-          <p style="color:#64748b; margin-bottom:12px;">为了保护您的账号安全，请先验证旧密码</p>
-          <input id="oldPass" type="password" placeholder="请输入旧密码">
-          <input id="newPass1" type="password" placeholder="请输入新密码（至少4位）">
-          <input id="newPass2" type="password" placeholder="请确认新密码">
-          <button class="btn-primary" id="confirmChange">确认修改</button>
-          <button class="btn-gray" id="cancelChange">取消</button>
-        </div>
-      `;
-      
-      document.getElementById('confirmChange').onclick = () => {
-        const oldPass = document.getElementById('oldPass').value;
-        const newPass1 = document.getElementById('newPass1').value;
-        const newPass2 = document.getElementById('newPass2').value;
-        
-        if (oldPass !== currentPassword) return alert('旧密码错误');
-        if (!newPass1 || newPass1.length < 4) return alert('新密码至少需要4位');
-        if (newPass1 !== newPass2) return alert('两次新密码输入不一致');
-        
-        if (role === 'visitor') {
-          const users = getUsers();
-          const user = users.find(u => u.username === cur.username);
-          user.password = newPass1;
-          saveUsers(users);
-        } else if (role === 'consultant') {
-          const consultants = getConsultants();
-          const consultant = consultants.find(c => c.id === cur.id);
-          consultant.password = newPass1;
-          saveConsultants(consultants);
-        }
-        
-        alert('密码修改成功！请重新登录。');
-        logout();
+      renderList();
+      document.getElementById('addProfileBtn').onclick = ()=>{
+        const n=document.getElementById('pName').value.trim(), ph=document.getElementById('pPhone').value.trim();
+        if(!n||!ph) { showToast('必填', 'warning'); return; }
+        const profs=g(DB.profiles); const newId=Date.now().toString();
+        profs.push({id:newId,owner:cur.username,name:n,phone:ph,note:document.getElementById('pNote').value});
+        s(DB.profiles,profs);
+        const cp = g(DB.profiles).filter(p=>p.owner===cur.username);
+        if(cp.length===1){const draft=getDraft(); draft.profileId=newId; saveDraft(draft);}
+        document.getElementById('pName').value=''; document.getElementById('pPhone').value=''; document.getElementById('pNote').value='';
+        showToast('新增成功', 'success'); renderList();
       };
-      
-      document.getElementById('cancelChange').onclick = () => {
-        if (role === 'visitor') renderVisitorCenter();
-        else if (role === 'consultant') renderConsultant();
-      };
+      document.getElementById('backToVisitor').onclick = renderVisitor;
     }
 
-    // ========== 咨询师界面 ==========
+    window.editProfileModal = function(id) {
+      const p = g(DB.profiles).find(x=>x.id===id); if(!p) return;
+      const modal = document.createElement('div'); modal.className='modal';
+      modal.innerHTML = `<div class="modal-content"><h3>编辑档案</h3><p>姓名</p><input id="epName" value="${p.name}"><p>手机</p><input id="epPhone" value="${p.phone}"><p>备注</p><textarea id="epNote" rows="2">${p.note||''}</textarea><div class="btn-group"><button class="btn-primary" id="epSave">保存</button><button class="btn-gray" id="epCancel">取消</button></div></div>`;
+      document.body.appendChild(modal);
+      document.getElementById('epCancel').onclick = ()=>modal.remove();
+      document.getElementById('epSave').onclick = ()=>{
+        const nn=document.getElementById('epName').value.trim(), np=document.getElementById('epPhone').value.trim();
+        if(!nn||!np) { showToast('不能为空', 'warning'); return; }
+        const profs=g(DB.profiles); const idx=profs.findIndex(x=>x.id===id);
+        profs[idx]={...profs[idx],name:nn,phone:np,note:document.getElementById('epNote').value};
+        s(DB.profiles,profs); modal.remove(); showToast('修改成功', 'success'); renderProfileManager();
+      };
+    };
+    window.editProfile = function(id) { window.editProfileModal(id); };
+    window.deleteProfile = function(id) { if(!confirm('删除？')) return; s(DB.profiles, g(DB.profiles).filter(x=>x.id!==id)); showToast('已删除', 'success'); renderProfileManager(); };
+    window.delProf = function(id) { window.deleteProfile(id); };
+
+    window.reschedule = function(id) {
+      const app = g(DB.appointments).find(a=>a.id===id); if(!app) return;
+      const cur = getCur(); const profiles = g(DB.profiles).filter(p=>p.owner===cur.username);
+      const modal = document.createElement('div'); modal.className='modal';
+      modal.innerHTML = `<div class="modal-content"><h3>改签</h3><input type="date" id="rd" value="${app.date}" min="${today()}"><select id="rt">${getTimeSlots(app.date).map(s=>`<option value="${s.value}" ${s.value===app.time?'selected':''}>${s.label}</option>`).join('')}</select><select id="rc">${g(DB.consultants).map(c=>`<option value="${c.id}" ${c.id===app.consultantId?'selected':''}>${c.name}</option>`).join('')}</select><select id="rp">${buildProfileOptions(profiles)}</select><textarea id="rn">${app.note||''}</textarea><div class="btn-group"><button class="btn-primary" id="sv">保存</button><button class="btn-gray" id="cl">取消</button></div></div>`;
+      document.body.appendChild(modal);
+      document.getElementById('rd').onchange = function(){ document.getElementById('rt').innerHTML = getTimeSlots(this.value).map(s=>`<option value="${s.value}">${s.label}</option>`).join(''); };
+      document.getElementById('rp').onchange = function(){ if(this.value==='__new__'){modal.remove(); renderProfileManager();} };
+      document.getElementById('cl').onclick = ()=>modal.remove();
+      document.getElementById('sv').onclick = ()=>{
+        const nd=document.getElementById('rd').value, nt=document.getElementById('rt').value, nc=document.getElementById('rc').value, np=document.getElementById('rp').value;
+        if(!nd||!nt||!nc) { showToast('填写完整', 'warning'); return; }
+        if(np==='__new__') { showToast('选择档案', 'warning'); return; }
+        if(conflict(nc,nd,nt,id)) { showToast('冲突', 'error'); return; }
+        const profile = profiles.find(x=>x.id===np);
+        const apps=g(DB.appointments); const idx=apps.findIndex(a=>a.id===id);
+        apps[idx]={...apps[idx],date:nd,time:nt,consultantId:nc,profileName:profile?`${profile.name} ${profile.phone}`:'',note:document.getElementById('rn').value};
+        s(DB.appointments,apps); modal.remove(); showToast('改签成功', 'success'); renderVisitor();
+      };
+    };
+
+    window.cancelApp = function(id) {
+      if(!confirm('确定取消？返还次数。')) return;
+      const apps=g(DB.appointments); const a=apps.find(x=>x.id===id);
+      if(a&&a.status==='wait'){ a.status='cancel'; s(DB.appointments,apps); returnRemaining(a.visitor); showToast('已取消，次数已返还', 'success'); }
+      renderVisitor();
+    };
+
+    // ========== 咨询师 ==========
     function renderConsultant() {
-      autoComplete();
-      const cur = getCurrentUser();
-      const apps = getAppointments().filter(a => a.consultantId === cur.id);
-      
-      appEl.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2>📋 工作台</h2>
-          <span class="role-badge">${cur.name}</span>
-        </div>
-        <div class="grid-list">
-          ${apps.length === 0 ? '<p style="text-align:center;color:#94a3b8; padding:20px;">暂无预约记录</p>' :
-            apps.map(a => {
-              const endTime = getEndTime(a.time);
-              const statusText = a.status === 'wait' ? '待咨询' : a.status === 'finish' ? '已完成' : '已取消';
-              return `
-                <div class="appointment-row">
-                  <div class="row-top">
-                    <div>
-                      <b>${a.date}</b>
-                      <div class="time-range">${a.time} - ${endTime}</div>
-                    </div>
-                    <span class="status-badge ${a.status}">${statusText}</span>
-                  </div>
-                  <div>来访者: ${a.profileName || '未指定'} | 账号: ${a.visitor}</div>
-                  ${a.note ? `<div style="color:#64748b;">备注: ${a.note}</div>` : ''}
-                  <div class="btn-group">
-                    <button class="btn-gray" onclick="window.consultantEditApp('${a.id}')">✏️ 修改信息</button>
-                    ${a.status === 'wait' ? `<button class="btn-primary" onclick="window.consultantFinish('${a.id}')">✅ 标记完成</button>` : ''}
-                  </div>
-                </div>
-              `;
-            }).join('')
-          }
-        </div>
-        <button class="btn-primary" id="changeConsPass">🔑 修改密码</button>
-        <button class="btn-danger" id="logoutCons">退出登录</button>
-      `;
-      
-      document.getElementById('changeConsPass').onclick = () => renderChangePassword('consultant');
-      document.getElementById('logoutCons').onclick = logout;
+      autoComplete(); const cur = getCur();
+      const apps = g(DB.appointments).filter(a => a.consultantId === cur.id);
+      const allUsers = g(DB.users); const allProfiles = g(DB.profiles);
+      appEl.innerHTML = `<div style="display:flex;justify-content:space-between;"><h2>📋 工作台</h2><span class="role-badge">${cur.name}</span></div><h3>📋 我的预约列表</h3><div class="grid-list">${apps.length===0?'<p style="color:#94a3b8;text-align:center;padding:20px;">暂无</p>':apps.map(a=>{const st=a.status==='wait'?'待':a.status==='finish'?'完':'取消';return `<div class="appointment-row"><div class="row-top"><div><span class="date-display">${formatDateNice(a.date)}</span><div class="time-range">${a.time}-${getEndTime(a.time)}</div></div><span class="status-badge ${a.status}">${st}</span></div><div>来访者: ${a.visitor} | ${a.profileName||''}</div>${a.note?`<div style="color:#64748b;">${a.note}</div>`:''}<div class="btn-group"><button class="btn-gray" onclick="consEdit('${a.id}')">✏️ 修改</button>${a.status==='wait'?`<button class="btn-primary" onclick="consDone('${a.id}')">✅ 完成</button>`:''}</div></div>`;}).join('')}</div><div class="section-divider"></div><div class="card"><h3>➕ 代预约</h3><select id="cVisitor"><option value="">选择来访者</option>${allUsers.map(u=>`<option value="${u.username}">${u.username} (${u.remaining}次)</option>`).join('')}</select><input type="date" id="cDate" min="${today()}" value="${today()}"><select id="cTime"><option>选时段</option>${getTimeSlots(today()).map(s=>`<option value="${s.value}">${s.label}</option>`).join('')}</select><div class="inline-group"><select id="cProfile" style="flex:1;"><option value="">选档案</option></select></div><textarea id="cNote" placeholder="备注" rows="2"></textarea><button class="btn-primary" id="cSubmit">✅ 创建预约</button></div><button class="btn-primary" id="chPwd">🔑 修改密码</button><button class="btn-danger" id="outBtn">退出</button>`;
+      document.getElementById('cDate').onchange = function(){ document.getElementById('cTime').innerHTML = '<option>选时段</option>'+getTimeSlots(this.value).map(x=>`<option value="${x.value}">${x.label}</option>`).join(''); };
+      document.getElementById('cVisitor').onchange = function(){const profs=allProfiles.filter(p=>p.owner===this.value);const def=profs.length===1?profs[0].id:'';document.getElementById('cProfile').innerHTML='<option value="">选档案</option>'+profs.map(p=>`<option value="${p.id}" ${p.id===def?'selected':''}>${p.name} ${p.phone}</option>`).join('');};
+      document.getElementById('cSubmit').onclick = ()=>{const v=document.getElementById('cVisitor').value,d=document.getElementById('cDate').value,t=document.getElementById('cTime').value,pid=document.getElementById('cProfile').value;if(!v||!d||!t){showToast('填写完整','warning');return;}const u=allUsers.find(x=>x.username===v);if(!u||u.remaining<=0){showToast('次数不足','error');return;}if(conflict(cur.id,d,t)){showToast('冲突','error');return;}const p=allProfiles.find(x=>x.id===pid);const apps=g(DB.appointments);apps.push({id:Date.now().toString(),visitor:v,consultantId:cur.id,date:d,time:t,profileName:p?`${p.name} ${p.phone}`:'',note:document.getElementById('cNote').value,status:'wait'});s(DB.appointments,apps);deductRemaining(v);showToast('创建成功','success');renderConsultant();};
+      document.getElementById('chPwd').onclick = ()=>{const cons=g(DB.consultants);const c=cons.find(x=>x.id===cur.id);const old=prompt('旧密码');if(old!==c.password){showToast('旧密码错误','error');return;}const n=prompt('新密码(≥4位)');if(!n||n.length<4){showToast('至少4位','warning');return;}c.password=n;s(DB.consultants,cons);showToast('修改成功','success');logout();};
+      document.getElementById('outBtn').onclick = logout;
     }
 
-    // 咨询师修改预约信息
-    window.consultantEditApp = function(appId) {
-      const app = getAppointments().find(a => a.id === appId);
-      if (!app) return;
+    window.consEdit = function(id) {
+      const app = g(DB.appointments).find(a=>a.id===id); if(!app) return;
+      const modal = document.createElement('div'); modal.className='modal';
+      modal.innerHTML = `<div class="modal-content"><h3>修改预约</h3><p><span class="date-display">${formatDateNice(app.date)}</span> ${app.time}-${getEndTime(app.time)} | ${app.visitor}</p><textarea id="ceNote">${app.note||''}</textarea><select id="ceStatus"><option value="wait" ${app.status==='wait'?'selected':''}>待咨询</option><option value="finish" ${app.status==='finish'?'selected':''}>已完成</option><option value="cancel" ${app.status==='cancel'?'selected':''}>已取消</option></select><p class="warning-text">⚠️ 取消将返还1次次数</p><div class="btn-group"><button class="btn-primary" id="ceSave">保存</button><button class="btn-gray" id="ceCancel">取消</button></div></div>`;
+      document.body.appendChild(modal);
+      document.getElementById('ceCancel').onclick = ()=>modal.remove();
+      document.getElementById('ceSave').onclick = ()=>{const apps=g(DB.appointments);const idx=apps.findIndex(a=>a.id===id);const old=apps[idx].status,nw=document.getElementById('ceStatus').value;apps[idx]={...apps[idx],note:document.getElementById('ceNote').value,status:nw};s(DB.appointments,apps);if(old==='wait'&&nw==='cancel'){returnRemaining(apps[idx].visitor);showToast('已取消，次数已返还','success');}modal.remove();renderConsultant();};
+    };
+    window.consDone = function(id) { if(!confirm('标记完成？')) return; const apps=g(DB.appointments); const a=apps.find(x=>x.id===id); if(a){a.status='finish';s(DB.appointments,apps);showToast('已完成','success');renderConsultant();} };
+
+    // ========== 管理员 ==========
+    function renderAdmin() {
+      autoComplete();
+      appEl.innerHTML = `<h2>⚙️ 管理员控制台</h2><button class="btn-primary" id="userBtn">👥 来访者管理</button><button class="btn-primary" id="consBtn">🩺 咨询师管理</button><button class="btn-primary" id="apptBtn">📝 预约管理</button><button class="btn-primary" id="allBtn">📊 全部预约</button><button class="btn-danger" id="outBtn">退出</button>`;
       
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>✏️ 修改预约信息</h3>
-          <p style="color:#64748b; margin-bottom:12px;">咨询师可以修改预约备注和状态</p>
+      document.getElementById('userBtn').onclick = () => {
+        const users = g(DB.users);
+        appEl.innerHTML = `<h2>👥 来访者</h2><div class="card"><input id="nu" placeholder="用户名"><input id="np" placeholder="密码"><input id="nt" type="number" value="5"><button class="btn-primary" id="addU">新增</button></div><div class="admin-table"><div class="table-header"><span>用户名</span><span>密码</span><span>次数</span><span>操作</span></div>${users.map(u=>`<div class="table-row"><span>${u.username}</span><span>${u.password}</span><span>${u.remaining}</span><span><button class="btn-gray" onclick="editUserModal('${u.username}')">编辑</button><button class="btn-danger" onclick="delUser('${u.username}')">删除</button></span></div>`).join('')}</div><button class="btn-gray" id="back">←返回</button>`;
+        document.getElementById('addU').onclick = ()=>{const un=document.getElementById('nu').value.trim();if(!un||users.find(u=>u.username===un)){showToast('用户名无效','warning');return;}users.push({username:un,password:document.getElementById('np').value,remaining:parseInt(document.getElementById('nt').value)||0});s(DB.users,users);showToast('创建成功','success');document.getElementById('userBtn').onclick();};
+        document.getElementById('back').onclick = renderAdmin;
+      };
+      
+      document.getElementById('consBtn').onclick = () => {
+        const cons = g(DB.consultants);
+        appEl.innerHTML = `<h2>🩺 咨询师</h2><div class="card"><input id="ca" placeholder="账号"><input id="cn" placeholder="姓名"><input id="ci" placeholder="简介"><input id="cp" placeholder="密码"><button class="btn-primary" id="addC">新增</button></div>${cons.map(c=>`<div class="appointment-row"><b>${c.name}</b>(${c.account}) ${c.intro||''}<div class="btn-group"><button class="btn-gray" onclick="editConsModal('${c.id}')">编辑</button><button class="btn-danger" onclick="delCons('${c.id}')">删除</button></div></div>`).join('')}<button class="btn-gray" id="back">←返回</button>`;
+        document.getElementById('addC').onclick = ()=>{const a=document.getElementById('ca').value.trim(),n=document.getElementById('cn').value.trim();if(!a||!n||cons.find(c=>c.account===a)){showToast('账号无效','warning');return;}cons.push({id:Date.now().toString(),account:a,name:n,intro:document.getElementById('ci').value,password:document.getElementById('cp').value||'123456'});s(DB.consultants,cons);showToast('添加成功','success');document.getElementById('consBtn').onclick();};
+        document.getElementById('back').onclick = renderAdmin;
+      };
+      
+      document.getElementById('apptBtn').onclick = () => {
+        const allUsers = g(DB.users); const allCons = g(DB.consultants); const allProfiles = g(DB.profiles); const allApps = g(DB.appointments);
+        appEl.innerHTML = `<h2>📝 预约管理</h2><h3>📋 全部预约</h3><div class="filter-row"><select id="aFilterStatus"><option value="">全部状态</option><option value="wait">待咨询</option><option value="finish">已完成</option><option value="cancel">已取消</option></select><select id="aFilterCons"><option value="">全部咨询师</option>${allCons.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div id="aList" class="grid-list"></div><div class="section-divider"></div><div class="card"><h3>➕ 新建预约</h3><select id="aVisitor"><option value="">选来访者</option>${allUsers.map(u=>`<option value="${u.username}">${u.username}(${u.remaining}次)</option>`).join('')}</select><select id="aConsultant"><option value="">选咨询师</option>${allCons.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select><input type="date" id="aDate" min="${today()}" value="${today()}"><select id="aTime"><option>选时段</option>${getTimeSlots(today()).map(s=>`<option value="${s.value}">${s.label}</option>`).join('')}</select><div class="inline-group"><select id="aProfile" style="flex:1;"><option value="">选档案</option></select></div><textarea id="aNote" placeholder="备注" rows="2"></textarea><button class="btn-primary" id="aSubmit">✅ 创建预约</button></div><button class="btn-gray" id="back">←返回</button>`;
+        document.getElementById('aDate').onchange = function(){document.getElementById('aTime').innerHTML='<option>选时段</option>'+getTimeSlots(this.value).map(x=>`<option value="${x.value}">${x.label}</option>`).join('');};
+        document.getElementById('aVisitor').onchange = function(){const profs=allProfiles.filter(p=>p.owner===this.value);const def=profs.length===1?profs[0].id:'';document.getElementById('aProfile').innerHTML='<option value="">选档案</option>'+profs.map(p=>`<option value="${p.id}" ${p.id===def?'selected':''}>${p.name} ${p.phone}</option>`).join('');};
+        function refreshList(){const st=document.getElementById('aFilterStatus').value,cid=document.getElementById('aFilterCons').value;let f=[...allApps];if(st)f=f.filter(a=>a.status===st);if(cid)f=f.filter(a=>a.consultantId===cid);document.getElementById('aList').innerHTML=f.length===0?'<p style="color:#94a3b8;text-align:center;padding:20px;">暂无</p>':f.map(a=>{const c=allCons.find(x=>x.id===a.consultantId);return`<div class="appointment-row"><div class="row-top"><div><span class="date-display">${formatDateNice(a.date)}</span><div class="time-range">${a.time}-${getEndTime(a.time)}</div></div><span class="status-badge ${a.status}">${a.status==='wait'?'待':a.status==='finish'?'完':'取消'}</span></div><div>${a.visitor} | ${c?.name||''} | ${a.profileName||''}</div><div class="btn-group"><button class="btn-gray" onclick="adminEditApp('${a.id}')">✏️编辑</button>${a.status==='wait'?`<button class="btn-primary" onclick="adminFinish('${a.id}')">✅完成</button><button class="btn-danger" onclick="adminCancelApp('${a.id}')">❌取消</button>`:''}</div></div>`;}).join('');}
+        document.getElementById('aFilterStatus').onchange=refreshList;document.getElementById('aFilterCons').onchange=refreshList;refreshList();
+        document.getElementById('aSubmit').onclick=()=>{const v=document.getElementById('aVisitor').value,cid=document.getElementById('aConsultant').value,d=document.getElementById('aDate').value,t=document.getElementById('aTime').value,pid=document.getElementById('aProfile').value;if(!v||!cid||!d||!t){showToast('填写完整','warning');return;}const u=allUsers.find(x=>x.username===v);if(!u||u.remaining<=0){showToast('次数不足','error');return;}if(conflict(cid,d,t)){showToast('冲突','error');return;}const p=allProfiles.find(x=>x.id===pid);const apps=g(DB.appointments);apps.push({id:Date.now().toString(),visitor:v,consultantId:cid,date:d,time:t,profileName:p?`${p.name} ${p.phone}`:'',note:document.getElementById('aNote').value,status:'wait'});s(DB.appointments,apps);deductRemaining(v);showToast('创建成功','success');document.getElementById('apptBtn').onclick();};
+        document.getElementById('back').onclick = renderAdmin;
+      };
+      
+      // ========== 全部预约（修复日期显示） ==========
+      document.getElementById('allBtn').onclick = () => {
+        const allApps = g(DB.appointments); const allCons = g(DB.consultants); const allUsers = g(DB.users);
+        const waitCount = allApps.filter(a=>a.status==='wait').length;
+        const finishCount = allApps.filter(a=>a.status==='finish').length;
+        const cancelCount = allApps.filter(a=>a.status==='cancel').length;
+        
+        appEl.innerHTML = `
+          <h2>📊 全部预约记录</h2>
+          <div class="card" style="padding:12px 16px;">
+            <span style="font-size:0.9rem;">总计: <b>${allApps.length}</b> 条</span>
+            <span class="stat-badge stat-wait">待咨询 ${waitCount}</span>
+            <span class="stat-badge stat-finish">已完成 ${finishCount}</span>
+            <span class="stat-badge stat-cancel">已取消 ${cancelCount}</span>
+          </div>
+          
           <div class="card">
-            <p><b>日期:</b> ${app.date}</p>
-            <p><b>时间:</b> ${app.time} - ${getEndTime(app.time)}</p>
-            <p><b>来访者:</b> ${app.visitor}</p>
-            <p><b>档案:</b> ${app.profileName || '未指定'}</p>
-          </div>
-          <textarea id="consultNote">${app.note || ''}</textarea>
-          <select id="consultStatus">
-            <option value="wait" ${app.status === 'wait' ? 'selected' : ''}>待咨询</option>
-            <option value="finish" ${app.status === 'finish' ? 'selected' : ''}>已完成</option>
-            <option value="cancel" ${app.status === 'cancel' ? 'selected' : ''}>已取消</option>
-          </select>
-          <div class="btn-group">
-            <button class="btn-primary" id="saveConsultEdit">保存修改</button>
-            <button class="btn-gray" id="cancelConsultEdit">取消</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      
-      document.getElementById('cancelConsultEdit').onclick = () => modal.remove();
-      document.getElementById('saveConsultEdit').onclick = () => {
-        const newNote = document.getElementById('consultNote').value;
-        const newStatus = document.getElementById('consultStatus').value;
-        
-        const apps = getAppointments();
-        const index = apps.findIndex(a => a.id === appId);
-        apps[index] = {
-          ...apps[index],
-          note: newNote,
-          status: newStatus
-        };
-        saveAppointments(apps);
-        modal.remove();
-        alert('预约信息已更新');
-        renderConsultant();
-      };
-    };
-
-    // 咨询师标记完成
-    window.consultantFinish = function(appId) {
-      if (!confirm('确认标记为已完成？')) return;
-      const apps = getAppointments();
-      const app = apps.find(a => a.id === appId);
-      if (app && app.status === 'wait') {
-        app.status = 'finish';
-        saveAppointments(apps);
-        renderConsultant();
-      }
-    };
-
-    // ========== 管理员界面 ==========
-    function renderAdminDashboard() {
-      autoComplete();
-      appEl.innerHTML = `
-        <h2>⚙️ 管理员控制台</h2>
-        <div class="card">
-          <button class="btn-primary" id="userMgrBtn">👥 来访者账号管理</button>
-          <button class="btn-primary" id="consultMgrBtn">🩺 咨询师管理</button>
-        </div>
-        <div class="card">
-          <button class="btn-primary" id="todayViewBtn">📅 当日排班总览</button>
-          <button class="btn-primary" id="historyViewBtn">📊 全部历史预约</button>
-        </div>
-        <button class="btn-danger" id="logoutAdmin">退出登录</button>
-      `;
-      
-      document.getElementById('userMgrBtn').onclick = manageUsers;
-      document.getElementById('consultMgrBtn').onclick = manageConsultants;
-      document.getElementById('todayViewBtn').onclick = adminTodayView;
-      document.getElementById('historyViewBtn').onclick = adminHistoryView;
-      document.getElementById('logoutAdmin').onclick = logout;
-    }
-
-    function manageUsers() {
-      const users = getUsers();
-      
-      appEl.innerHTML = `
-        <h2>👥 来访者账号管理</h2>
-        <div class="card">
-          <h3>新增账号</h3>
-          <input id="newUser" placeholder="用户名（唯一）">
-          <input id="newPass" placeholder="密码">
-          <input id="newTimes" type="number" placeholder="初始预约次数" value="5" min="0">
-          <button class="btn-primary" id="addUserBtn">➕ 创建账号</button>
-        </div>
-        <div class="admin-table">
-          <div class="table-header">
-            <span>用户名</span>
-            <span>密码</span>
-            <span>次数</span>
-            <span>操作</span>
-          </div>
-          ${users.map(u => `
-            <div class="table-row">
-              <span><b>${u.username}</b></span>
-              <span>${u.password}</span>
-              <span>${u.remaining}</span>
-              <span>
-                <button class="btn-gray" onclick="window.editUser('${u.username}')" style="font-size:0.75rem; padding:6px 10px; min-height:36px;">编辑</button>
-                <button class="btn-danger" onclick="window.deleteUser('${u.username}')" style="font-size:0.75rem; padding:6px 10px; min-height:36px;">删除</button>
-              </span>
+            <h3>🔍 筛选检索</h3>
+            <!-- 第一行：来访者 + 咨询师 -->
+            <div class="filter-row">
+              <select id="afUser"><option value="">全部来访者</option>${allUsers.map(u=>`<option value="${u.username}">${u.username}</option>`).join('')}</select>
+              <select id="afCons"><option value="">全部咨询师</option>${allCons.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
             </div>
-          `).join('')}
-        </div>
-        <button class="btn-gray" id="backToAdmin">← 返回控制台</button>
-      `;
-      
-      document.getElementById('addUserBtn').onclick = () => {
-        const username = document.getElementById('newUser').value.trim();
-        const password = document.getElementById('newPass').value;
-        const times = parseInt(document.getElementById('newTimes').value) || 0;
-        
-        if (!username) return alert('用户名不能为空');
-        if (users.find(u => u.username === username)) return alert('用户名已存在');
-        
-        const allUsers = getUsers();
-        allUsers.push({ username, password, remaining: times });
-        saveUsers(allUsers);
-        alert('账号创建成功！');
-        manageUsers();
-      };
-      
-      document.getElementById('backToAdmin').onclick = renderAdminDashboard;
-    }
-
-    window.editUser = function(username) {
-      const users = getUsers();
-      const user = users.find(u => u.username === username);
-      if (!user) return;
-      
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>编辑账号: ${username}</h3>
-          <p>修改密码（无需旧密码）:</p>
-          <input id="editPass" type="text" value="${user.password}">
-          <p>调整剩余预约次数:</p>
-          <input id="editTimes" type="number" value="${user.remaining}" min="0">
-          <div class="btn-group">
-            <button class="btn-primary" id="saveEdit">保存</button>
-            <button class="btn-gray" id="cancelEdit">取消</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      
-      document.getElementById('cancelEdit').onclick = () => modal.remove();
-      document.getElementById('saveEdit').onclick = () => {
-        const newPass = document.getElementById('editPass').value;
-        const newTimes = parseInt(document.getElementById('editTimes').value) || 0;
-        
-        const allUsers = getUsers();
-        const targetUser = allUsers.find(u => u.username === username);
-        targetUser.password = newPass;
-        targetUser.remaining = newTimes;
-        saveUsers(allUsers);
-        
-        modal.remove();
-        alert('修改成功！');
-        manageUsers();
-      };
-    };
-
-    window.deleteUser = function(username) {
-      if (!confirm(`确定要删除账号 "${username}" 吗？此操作不可撤销。`)) return;
-      
-      const users = getUsers().filter(u => u.username !== username);
-      saveUsers(users);
-      alert('账号已删除');
-      manageUsers();
-    };
-
-    function manageConsultants() {
-      const consultants = getConsultants();
-      
-      appEl.innerHTML = `
-        <h2>🩺 咨询师管理</h2>
-        <div class="card">
-          <h3>新增咨询师</h3>
-          <input id="cAccount" placeholder="登录账号（唯一）">
-          <input id="cName" placeholder="显示姓名">
-          <input id="cIntro" placeholder="擅长简介">
-          <input id="cPass" placeholder="登录密码">
-          <button class="btn-primary" id="addConsultantBtn">➕ 新增咨询师</button>
-        </div>
-        <div class="grid-list">
-          ${consultants.map(c => `
-            <div class="appointment-row">
-              <div class="row-top">
-                <b>${c.name}</b>
-                <span style="color:#64748b;">账号: ${c.account}</span>
+            <!-- 第二行：状态 -->
+            <div class="filter-row">
+              <select id="afStatus"><option value="">全部状态</option><option value="wait">待咨询</option><option value="finish">已完成</option><option value="cancel">已取消</option></select>
+            </div>
+            <!-- 第三行：开始日期 + 结束日期 -->
+            <div class="filter-row">
+              <div class="custom-date-wrapper">
+                <input type="date" id="afDateFrom">
+                <span class="custom-date-placeholder">📅 开始日期</span>
               </div>
-              <div>擅长: ${c.intro || '未设置'}</div>
-              <div style="color:#94a3b8;">密码: ${c.password}</div>
-              <div class="btn-group">
-                <button class="btn-gray" onclick="window.editConsultant('${c.id}')">编辑</button>
-                <button class="btn-danger" onclick="window.deleteConsultant('${c.id}')">删除</button>
+              <div class="custom-date-wrapper">
+                <input type="date" id="afDateTo">
+                <span class="custom-date-placeholder">📅 结束日期</span>
               </div>
             </div>
-          `).join('')}
-        </div>
-        <button class="btn-gray" id="backToAdmin">← 返回控制台</button>
-      `;
-      
-      document.getElementById('addConsultantBtn').onclick = () => {
-        const account = document.getElementById('cAccount').value.trim();
-        const name = document.getElementById('cName').value.trim();
-        const intro = document.getElementById('cIntro').value.trim();
-        const password = document.getElementById('cPass').value;
-        
-        if (!account || !name) return alert('账号和姓名不能为空');
-        if (consultants.find(c => c.account === account)) return alert('账号已存在');
-        
-        const allConsultants = getConsultants();
-        allConsultants.push({
-          id: Date.now().toString(),
-          account,
-          name,
-          intro,
-          password: password || '123456'
-        });
-        saveConsultants(allConsultants);
-        alert('咨询师添加成功！');
-        manageConsultants();
-      };
-      
-      document.getElementById('backToAdmin').onclick = renderAdminDashboard;
-    }
-
-    window.editConsultant = function(consultantId) {
-      const consultants = getConsultants();
-      const consultant = consultants.find(c => c.id === consultantId);
-      if (!consultant) return;
-      
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>编辑咨询师</h3>
-          <p>登录账号:</p>
-          <input id="editAccount" value="${consultant.account}">
-          <p>显示姓名:</p>
-          <input id="editName" value="${consultant.name}">
-          <p>擅长简介:</p>
-          <input id="editIntro" value="${consultant.intro || ''}">
-          <p>登录密码:</p>
-          <input id="editPass" value="${consultant.password}">
-          <div class="btn-group">
-            <button class="btn-primary" id="saveConsultantEdit">保存</button>
-            <button class="btn-gray" id="cancelConsultantEdit">取消</button>
+            <div class="btn-group" style="margin-top:8px;">
+              <button class="btn-gray btn-sm" id="afReset">🔄 重置</button>
+              <button class="btn-success btn-sm" id="afExport">📤 导出Excel</button>
+            </div>
           </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      
-      document.getElementById('cancelConsultantEdit').onclick = () => modal.remove();
-      document.getElementById('saveConsultantEdit').onclick = () => {
-        const newAccount = document.getElementById('editAccount').value.trim();
-        const newName = document.getElementById('editName').value.trim();
-        const newIntro = document.getElementById('editIntro').value.trim();
-        const newPass = document.getElementById('editPass').value;
+          
+          <div id="afList" class="grid-list"></div>
+          <button class="btn-gray" id="back">← 返回控制台</button>
+        `;
         
-        if (!newAccount || !newName) return alert('账号和姓名不能为空');
+        // 设置自定义日期输入框
+        function setupCustomDate(inputId) {
+          const input = document.getElementById(inputId);
+          const wrapper = input.parentElement;
+          const placeholder = wrapper.querySelector('.custom-date-placeholder');
+          input.addEventListener('change', function() {
+            if (this.value) {
+              placeholder.style.opacity = '0';
+            } else {
+              placeholder.style.opacity = '1';
+            }
+          });
+          input.addEventListener('focus', function() {
+            placeholder.style.opacity = '0';
+          });
+          input.addEventListener('blur', function() {
+            if (!this.value) placeholder.style.opacity = '1';
+          });
+          // 初始状态
+          if (!input.value) placeholder.style.opacity = '1';
+        }
+        setupCustomDate('afDateFrom');
+        setupCustomDate('afDateTo');
         
-        const allConsultants = getConsultants();
-        if (allConsultants.some(c => c.account === newAccount && c.id !== consultantId)) {
-          return alert('账号已被其他咨询师使用');
+        function getFilteredApps() {
+          const fUser = document.getElementById('afUser').value;
+          const fCons = document.getElementById('afCons').value;
+          const fStatus = document.getElementById('afStatus').value;
+          const fDateFrom = document.getElementById('afDateFrom').value;
+          const fDateTo = document.getElementById('afDateTo').value;
+          let filtered = [...allApps];
+          if(fUser) filtered = filtered.filter(a=>a.visitor===fUser);
+          if(fCons) filtered = filtered.filter(a=>a.consultantId===fCons);
+          if(fStatus) filtered = filtered.filter(a=>a.status===fStatus);
+          if(fDateFrom) filtered = filtered.filter(a=>a.date>=fDateFrom);
+          if(fDateTo) filtered = filtered.filter(a=>a.date<=fDateTo);
+          return filtered;
         }
         
-        const targetConsultant = allConsultants.find(c => c.id === consultantId);
-        targetConsultant.account = newAccount;
-        targetConsultant.name = newName;
-        targetConsultant.intro = newIntro;
-        targetConsultant.password = newPass;
-        saveConsultants(allConsultants);
+        function refreshFiltered() {
+          const filtered = getFilteredApps();
+          document.getElementById('afList').innerHTML = filtered.length===0?
+            '<p style="color:#94a3b8;text-align:center;padding:20px;">无匹配记录</p>':
+            filtered.map(a=>{
+              const c=allCons.find(x=>x.id===a.consultantId);
+              return `<div class="appointment-row">
+                <div class="row-top"><div><span class="date-display">${formatDateNice(a.date)}</span><div class="time-range">${a.time}-${getEndTime(a.time)}</div></div><span class="status-badge ${a.status}">${a.status==='wait'?'待':a.status==='finish'?'完':'取消'}</span></div>
+                <div>来访者: ${a.visitor} | 咨询师: ${c?.name||'未知'} | ${a.profileName||''}</div>
+                ${a.note?`<div style="color:#64748b;">备注: ${a.note}</div>`:''}
+                <div class="btn-group"><button class="btn-gray btn-sm" onclick="adminEditApp('${a.id}')">✏️ 编辑</button>${a.status==='wait'?`<button class="btn-primary btn-sm" onclick="adminFinish('${a.id}')">✅ 完成</button><button class="btn-danger btn-sm" onclick="adminCancelApp('${a.id}')">❌ 取消</button>`:''}</div>
+              </div>`;
+            }).join('');
+        }
         
-        modal.remove();
-        alert('修改成功！');
-        manageConsultants();
-      };
-    };
-
-    window.deleteConsultant = function(consultantId) {
-      if (!confirm('确定要删除这个咨询师吗？历史预约数据会保留。')) return;
-      
-      const consultants = getConsultants().filter(c => c.id !== consultantId);
-      saveConsultants(consultants);
-      alert('咨询师已删除');
-      manageConsultants();
-    };
-
-    function adminTodayView() {
-      const todayAppointments = getAppointments().filter(a => a.date === todayStr());
-      const consultants = getConsultants();
-      
-      appEl.innerHTML = `
-        <h2>📅 当日排班总览</h2>
-        <div class="card">
-          <select id="filterConsultant">
-            <option value="">全部咨询师</option>
-            ${consultants.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-          </select>
-          <select id="filterStatus">
-            <option value="">全部状态</option>
-            <option value="wait">待咨询</option>
-            <option value="finish">已完成</option>
-            <option value="cancel">已取消</option>
-          </select>
-          <button class="btn-success" id="exportTodayBtn">📤 导出Excel</button>
-        </div>
-        <div id="todayAppointmentsList" class="grid-list"></div>
-        <button class="btn-gray" id="backToAdmin">← 返回控制台</button>
-      `;
-      
-      function renderFiltered() {
-        const filterConsultant = document.getElementById('filterConsultant').value;
-        const filterStatus = document.getElementById('filterStatus').value;
+        document.getElementById('afUser').onchange = refreshFiltered;
+        document.getElementById('afCons').onchange = refreshFiltered;
+        document.getElementById('afStatus').onchange = refreshFiltered;
+        document.getElementById('afDateFrom').onchange = refreshFiltered;
+        document.getElementById('afDateTo').onchange = refreshFiltered;
         
-        let filtered = [...todayAppointments];
-        if (filterConsultant) filtered = filtered.filter(a => a.consultantId === filterConsultant);
-        if (filterStatus) filtered = filtered.filter(a => a.status === filterStatus);
-        
-        document.getElementById('todayAppointmentsList').innerHTML = filtered.length === 0 ?
-          '<p style="text-align:center;color:#94a3b8; padding:20px;">暂无匹配记录</p>' :
-          filtered.map(a => {
-            const consultant = consultants.find(c => c.id === a.consultantId);
-            const endTime = getEndTime(a.time);
-            const statusText = a.status === 'wait' ? '待咨询' : a.status === 'finish' ? '已完成' : '已取消';
-            return `
-              <div class="appointment-row">
-                <div class="row-top">
-                  <div>
-                    <b>${a.time} - ${endTime}</b>
-                  </div>
-                  <span class="status-badge ${a.status}">${statusText}</span>
-                </div>
-                <div>咨询师: ${consultant?.name || '未知'} | 来访者: ${a.visitor}</div>
-                <div>${a.profileName || '未指定档案'}</div>
-                ${a.note ? `<div style="color:#64748b;">备注: ${a.note}</div>` : ''}
-                ${a.status === 'wait' ? `
-                  <div class="btn-group">
-                    <button class="btn-primary" onclick="window.markFinish('${a.id}')">✅ 标记完成</button>
-                    <button class="btn-danger" onclick="window.adminCancel('${a.id}')">❌ 取消预约</button>
-                  </div>
-                ` : ''}
-              </div>
-            `;
-          }).join('');
-      }
-      
-      document.getElementById('filterConsultant').onchange = renderFiltered;
-      document.getElementById('filterStatus').onchange = renderFiltered;
-      renderFiltered();
-      
-      document.getElementById('exportTodayBtn').onclick = () => {
-        const filtered = getFilteredTodayAppointments();
-        exportToExcel(filtered, '当日排班');
-      };
-      
-      document.getElementById('backToAdmin').onclick = renderAdminDashboard;
-    }
-
-    function getFilteredTodayAppointments() {
-      const todayAppointments = getAppointments().filter(a => a.date === todayStr());
-      const filterConsultant = document.getElementById('filterConsultant')?.value;
-      const filterStatus = document.getElementById('filterStatus')?.value;
-      
-      let filtered = [...todayAppointments];
-      if (filterConsultant) filtered = filtered.filter(a => a.consultantId === filterConsultant);
-      if (filterStatus) filtered = filtered.filter(a => a.status === filterStatus);
-      return filtered;
-    }
-
-    window.markFinish = function(appId) {
-      if (!confirm('确定标记为已完成？')) return;
-      const apps = getAppointments();
-      const app = apps.find(a => a.id === appId);
-      if (app) {
-        app.status = 'finish';
-        saveAppointments(apps);
-        adminTodayView();
-      }
-    };
-
-    window.adminCancel = function(appId) {
-      if (!confirm('确定取消这个预约？不会自动返还次数。')) return;
-      const apps = getAppointments();
-      const app = apps.find(a => a.id === appId);
-      if (app) {
-        app.status = 'cancel';
-        saveAppointments(apps);
-        adminTodayView();
-      }
-    };
-
-    function adminHistoryView() {
-      const allAppointments = getAppointments();
-      const consultants = getConsultants();
-      const users = getUsers();
-      
-      appEl.innerHTML = `
-        <h2>📊 全部历史预约</h2>
-        <div class="card">
-          <select id="historyFilterUser">
-            <option value="">全部来访者</option>
-            ${users.map(u => `<option value="${u.username}">${u.username}</option>`).join('')}
-          </select>
-          <select id="historyFilterConsultant">
-            <option value="">全部咨询师</option>
-            ${consultants.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-          </select>
-          <select id="historyFilterStatus">
-            <option value="">全部状态</option>
-            <option value="wait">待咨询</option>
-            <option value="finish">已完成</option>
-            <option value="cancel">已取消</option>
-          </select>
-          <button class="btn-success" id="exportAllBtn">📤 导出全部Excel</button>
-        </div>
-        <div id="historyList" class="grid-list"></div>
-        <button class="btn-gray" id="backToAdmin">← 返回控制台</button>
-      `;
-      
-      function renderFilteredHistory() {
-        const filterUser = document.getElementById('historyFilterUser').value;
-        const filterConsultant = document.getElementById('historyFilterConsultant').value;
-        const filterStatus = document.getElementById('historyFilterStatus').value;
-        
-        let filtered = [...allAppointments];
-        if (filterUser) filtered = filtered.filter(a => a.visitor === filterUser);
-        if (filterConsultant) filtered = filtered.filter(a => a.consultantId === filterConsultant);
-        if (filterStatus) filtered = filtered.filter(a => a.status === filterStatus);
-        
-        document.getElementById('historyList').innerHTML = filtered.length === 0 ?
-          '<p style="text-align:center;color:#94a3b8; padding:20px;">暂无匹配记录</p>' :
-          filtered.map(a => {
-            const consultant = consultants.find(c => c.id === a.consultantId);
-            const endTime = getEndTime(a.time);
-            const statusText = a.status === 'wait' ? '待咨询' : a.status === 'finish' ? '已完成' : '已取消';
-            return `
-              <div class="appointment-row">
-                <div class="row-top">
-                  <div>
-                    <b>${a.date}</b>
-                    <div class="time-range">${a.time} - ${endTime}</div>
-                  </div>
-                  <span class="status-badge ${a.status}">${statusText}</span>
-                </div>
-                <div>来访者: ${a.visitor} | 咨询师: ${consultant?.name || '未知'}</div>
-                <div>${a.profileName || '未指定档案'}</div>
-                ${a.note ? `<div style="color:#64748b;">备注: ${a.note}</div>` : ''}
-              </div>
-            `;
-          }).join('');
-      }
-      
-      document.getElementById('historyFilterUser').onchange = renderFilteredHistory;
-      document.getElementById('historyFilterConsultant').onchange = renderFilteredHistory;
-      document.getElementById('historyFilterStatus').onchange = renderFilteredHistory;
-      renderFilteredHistory();
-      
-      document.getElementById('exportAllBtn').onclick = () => {
-        const filtered = getFilteredHistoryAppointments();
-        exportToExcel(filtered, '全部历史预约');
-      };
-      
-      document.getElementById('backToAdmin').onclick = renderAdminDashboard;
-    }
-
-    function getFilteredHistoryAppointments() {
-      const allAppointments = getAppointments();
-      const filterUser = document.getElementById('historyFilterUser')?.value;
-      const filterConsultant = document.getElementById('historyFilterConsultant')?.value;
-      const filterStatus = document.getElementById('historyFilterStatus')?.value;
-      
-      let filtered = [...allAppointments];
-      if (filterUser) filtered = filtered.filter(a => a.visitor === filterUser);
-      if (filterConsultant) filtered = filtered.filter(a => a.consultantId === filterConsultant);
-      if (filterStatus) filtered = filtered.filter(a => a.status === filterStatus);
-      return filtered;
-    }
-
-    function exportToExcel(data, filename) {
-      const consultants = getConsultants();
-      const exportData = data.map(a => {
-        const consultant = consultants.find(c => c.id === a.consultantId);
-        const endTime = getEndTime(a.time);
-        return {
-          '日期': a.date,
-          '时间段': `${a.time} - ${endTime}`,
-          '来访者': a.visitor,
-          '咨询师': consultant?.name || '未知',
-          '来访者信息': a.profileName || '',
-          '状态': a.status === 'wait' ? '待咨询' : a.status === 'finish' ? '已完成' : '已取消',
-          '备注': a.note || ''
+        document.getElementById('afReset').onclick = ()=>{
+          document.getElementById('afUser').value='';
+          document.getElementById('afCons').value='';
+          document.getElementById('afStatus').value='';
+          document.getElementById('afDateFrom').value='';
+          document.getElementById('afDateTo').value='';
+          document.querySelectorAll('.custom-date-placeholder').forEach(el => el.style.opacity = '1');
+          refreshFiltered();
         };
-      });
+        
+        document.getElementById('afExport').onclick = ()=>{
+          const data = getFilteredApps();
+          const exportData = data.map(a=>{
+            const c=allCons.find(x=>x.id===a.consultantId);
+            return {'日期':a.date,'时段':`${a.time}-${getEndTime(a.time)}`,'来访者':a.visitor,'咨询师':c?.name||'未知','档案':a.profileName||'','状态':a.status==='wait'?'待咨询':a.status==='finish'?'已完成':'已取消','备注':a.note||''};
+          });
+          const ws = XLSX.utils.json_to_sheet(exportData);
+          const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'全部预约');
+          XLSX.writeFile(wb,`全部预约_${today()}.xlsx`);
+          showToast('导出成功', 'success');
+        };
+        
+        refreshFiltered();
+        document.getElementById('back').onclick = renderAdmin;
+      };
       
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "预约记录");
-      XLSX.writeFile(wb, `${filename}.xlsx`);
+      document.getElementById('outBtn').onclick = logout;
     }
 
-    // ========== 启动应用 ==========
+    // 弹窗编辑
+    window.editUserModal = function(un) {
+      const u = g(DB.users).find(x=>x.username===un); if(!u) return;
+      const modal = document.createElement('div'); modal.className='modal';
+      modal.innerHTML = `<div class="modal-content"><h3>编辑: ${un}</h3><p>密码</p><input id="euPass" value="${u.password}"><p>次数</p><input id="euTimes" type="number" value="${u.remaining}" min="0"><div class="btn-group"><button class="btn-primary" id="euSave">保存</button><button class="btn-gray" id="euCancel">取消</button></div></div>`;
+      document.body.appendChild(modal);
+      document.getElementById('euCancel').onclick = ()=>modal.remove();
+      document.getElementById('euSave').onclick = ()=>{const np=document.getElementById('euPass').value,nt=parseInt(document.getElementById('euTimes').value)||0;const users=g(DB.users);const user=users.find(x=>x.username===un);user.password=np;user.remaining=nt;s(DB.users,users);modal.remove();showToast('修改成功','success');document.getElementById('userBtn')?.onclick();};
+    };
+    window.editUser = function(un) { window.editUserModal(un); };
+    window.delUser = function(un) { if(!confirm(`删除${un}？`)) return; s(DB.users, g(DB.users).filter(u=>u.username!==un)); showToast('已删除','success'); renderAdmin(); };
+
+    window.editConsModal = function(id) {
+      const c = g(DB.consultants).find(x=>x.id===id); if(!c) return;
+      const modal = document.createElement('div'); modal.className='modal';
+      modal.innerHTML = `<div class="modal-content"><h3>编辑咨询师</h3><p>账号</p><input id="ecAcc" value="${c.account}"><p>姓名</p><input id="ecName" value="${c.name}"><p>简介</p><input id="ecIntro" value="${c.intro||''}"><p>密码</p><input id="ecPass" value="${c.password}"><div class="btn-group"><button class="btn-primary" id="ecSave">保存</button><button class="btn-gray" id="ecCancel">取消</button></div></div>`;
+      document.body.appendChild(modal);
+      document.getElementById('ecCancel').onclick = ()=>modal.remove();
+      document.getElementById('ecSave').onclick = ()=>{const na=document.getElementById('ecAcc').value.trim(),nn=document.getElementById('ecName').value.trim();if(!na||!nn){showToast('不能为空','warning');return;}const cons=g(DB.consultants);if(cons.some(x=>x.account===na&&x.id!==id)){showToast('账号重复','error');return;}const con=cons.find(x=>x.id===id);con.account=na;con.name=nn;con.intro=document.getElementById('ecIntro').value;con.password=document.getElementById('ecPass').value;s(DB.consultants,cons);modal.remove();showToast('修改成功','success');document.getElementById('consBtn')?.onclick();};
+    };
+    window.editCons = function(id) { window.editConsModal(id); };
+    window.delCons = function(id) { if(!confirm('删除？')) return; s(DB.consultants, g(DB.consultants).filter(c=>c.id!==id)); showToast('已删除','success'); renderAdmin(); };
+
+    window.adminEditApp = function(id) {
+      const app=g(DB.appointments).find(a=>a.id===id); if(!app) return;
+      const modal=document.createElement('div'); modal.className='modal';
+      modal.innerHTML = `<div class="modal-content"><h3>编辑预约</h3><p><span class="date-display">${formatDateNice(app.date)}</span> ${app.time}-${getEndTime(app.time)} | ${app.visitor}</p><textarea id="aeNote">${app.note||''}</textarea><select id="aeStatus"><option value="wait" ${app.status==='wait'?'selected':''}>待咨询</option><option value="finish" ${app.status==='finish'?'selected':''}>已完成</option><option value="cancel" ${app.status==='cancel'?'selected':''}>已取消</option></select><p class="warning-text">⚠️ 取消返还1次</p><div class="btn-group"><button class="btn-primary" id="aeSave">保存</button><button class="btn-gray" id="aeCancel">取消</button></div></div>`;
+      document.body.appendChild(modal);
+      document.getElementById('aeCancel').onclick = ()=>modal.remove();
+      document.getElementById('aeSave').onclick = ()=>{const apps=g(DB.appointments);const idx=apps.findIndex(a=>a.id===id);const old=apps[idx].status,nw=document.getElementById('aeStatus').value;apps[idx]={...apps[idx],note:document.getElementById('aeNote').value,status:nw};s(DB.appointments,apps);if(old==='wait'&&nw==='cancel'){returnRemaining(apps[idx].visitor);showToast('已取消返还','success');}modal.remove();if(document.getElementById('afList'))document.getElementById('allBtn').onclick();else document.getElementById('apptBtn')?.onclick();};
+    };
+    window.adminFinish = function(id) { if(!confirm('标记完成？')) return; const apps=g(DB.appointments); const a=apps.find(x=>x.id===id); if(a){a.status='finish';s(DB.appointments,apps);showToast('已完成','success');} if(document.getElementById('afList'))document.getElementById('allBtn').onclick();else document.getElementById('apptBtn')?.onclick(); };
+    window.adminCancelApp = function(id) { if(!confirm('确定取消？\n\n✅ 将自动返还来访者1次预约次数')) return; const apps=g(DB.appointments); const a=apps.find(x=>x.id===id); if(a&&a.status==='wait'){a.status='cancel';s(DB.appointments,apps);returnRemaining(a.visitor);showToast('已取消返还','success');} if(document.getElementById('afList'))document.getElementById('allBtn').onclick();else document.getElementById('apptBtn')?.onclick(); };
+
+    // ========== 启动 ==========
     const appEl = document.getElementById('app');
-    initData();
-    
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      if (currentUser.role === 'visitor') renderVisitor();
-      else if (currentUser.role === 'consultant') renderConsultant();
-      else if (currentUser.role === 'admin') renderAdminDashboard();
-    } else {
-      renderLogin();
-    }
+    init(); autoComplete();
+    const cur = getCur();
+    if (cur) {
+      if (cur.role === 'visitor') renderVisitor();
+      else if (cur.role === 'consultant') renderConsultant();
+      else if (cur.role === 'admin') renderAdmin();
+    } else { renderLogin(); }
   })();
 </script>
 </body>
