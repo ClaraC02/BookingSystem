@@ -59,7 +59,7 @@
     }
     .custom-date-wrap input[type="date"] {
       color: transparent; cursor: pointer; position: relative; z-index: 1;
-      padding: 8px 30px 8px 12px; min-height: 44px; width: 100%; font-size: 15px;min-width: 0;
+      padding: 8px 12px; min-height: 44px; width: 100%; font-size: 15px;min-width: 0;
 
     }
     .custom-date-wrap input[type="date"]:valid,
@@ -638,7 +638,7 @@ function renderAdmin() {
   };
 
   document.getElementById('cb').onclick = function(){
-    appEl.innerHTML = '<h2>🩺 咨询师</h2><div class="card"><input id="ca" placeholder="账号"><input id="cn" placeholder="姓名"><input id="cpass" placeholder="密码"><button class="btn-primary" id="addC">新增</button></div>'+cachedConsultants.map(function(c){return '<div class="appointment-row"><b>'+c.name+'</b>('+c.account+')<div class="btn-group"><button class="btn-gray" onclick="ec(\''+c.id+'\')">编辑</button><button class="btn-danger" onclick="dc(\''+c.id+'\')">删除</button></div></div>';}).join('')+'<button class="btn-gray" id="back">←返回</button>';
+    appEl.innerHTML = '<h2>🩺 咨询师</h2><div class="card"><input id="ca" placeholder="账号"><input id="cn" placeholder="姓名"><input id="cpass" placeholder="密码"><button class="btn-primary" id="addC">新增</button></div>'+cachedConsultants.map(function(c){return '<div class="appointment-row"><b>'+c.name+'</b>('+c.account+') 密码:'+c.password+'<div class="btn-group"><button class="btn-gray" onclick="ec(\''+c.id+'\')">编辑</button><button class="btn-danger" onclick="dc(\''+c.id+'\')">删除</button></div></div>';}).join('')+'<button class="btn-gray" id="back">←返回</button>';
     document.getElementById('addC').onclick = function(){
       var a=document.getElementById('ca').value.trim(), n=document.getElementById('cn').value.trim();
       if(!a||!n||cachedConsultants.find(function(c){return c.account===a;})){toast('无效','warning');return;}
@@ -690,9 +690,8 @@ function renderAdmin() {
 // 管理员全局函数
 window.eu = function(un) {
   var u=cachedUsers.find(function(x){return x.username===un;});
-  var np=prompt('新密码',u.password); if(np===null)return;
-  var nt=prompt('新次数',u.remaining); if(nt===null)return;
-  u.password=np; u.remaining=parseInt(nt)||0; saveData(); toast('修改成功','success'); renderAdmin();
+  var nt=prompt('修改剩余预约次数',u.remaining); if(nt===null)return;
+  u.remaining=parseInt(nt)||0; saveData(); toast('修改成功','success'); renderAdmin();
 };
 window.du = function(un) {
   if(!confirm('删除？')) return;
