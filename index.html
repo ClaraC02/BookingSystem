@@ -76,6 +76,9 @@
     .loading { text-align: center; padding: 40px; color: #64748b; }
     .loading-spinner { display: inline-block; width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .tab-bar { display: flex; gap: 4px; margin-bottom: 8px; background: #f1f5f9; border-radius: 12px; padding: 4px; }
+    .tab-btn { flex: 1; padding: 10px 6px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: #64748b; transition: all 0.2s; text-align: center; min-height: auto; box-shadow: none; margin: 0; }
+    .tab-btn.active { background: white; color: #667eea; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
@@ -85,101 +88,43 @@
 <script>
 var appEl = document.getElementById('app');
 function showLoading(msg) { appEl.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p style="margin-top:16px;">'+msg+'</p></div>'; }
-
-// Firebase SDK
 var firebaseLoaded = false, db = null;
 function loadFirebaseSDK() {
   return new Promise(function(resolve, reject) {
     if (typeof firebase !== 'undefined' && firebase.firestore) { firebaseLoaded = true; resolve(); return; }
-    var s1 = document.createElement('script');
-    s1.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
+    var s1 = document.createElement('script'); s1.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
     s1.onload = function() {
-      var s2 = document.createElement('script');
-      s2.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js';
-      s2.onload = function() { firebaseLoaded = true; resolve(); };
-      s2.onerror = function() { reject(new Error('Firestore load fail')); };
-      document.head.appendChild(s2);
-    };
-    s1.onerror = function() { reject(new Error('Firebase load fail')); };
-    document.head.appendChild(s1);
+      var s2 = document.createElement('script'); s2.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js';
+      s2.onload = function() { firebaseLoaded = true; resolve(); }; s2.onerror = function() { reject(new Error('Firestore load fail')); }; document.head.appendChild(s2);
+    }; s1.onerror = function() { reject(new Error('Firebase load fail')); }; document.head.appendChild(s1);
   });
 }
-
-// 本地存储
 var DBK = { u:'lu', c:'lc', a:'la', p:'lp' };
 function lg(k) { return JSON.parse(localStorage.getItem(k) || '[]'); }
 function ls(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 function initLocal() {
   if(!localStorage.getItem(DBK.u)) ls(DBK.u, [{username:'user1',password:'123456',remaining:5}]);
   if(!localStorage.getItem(DBK.c)) ls(DBK.c, [{id:'c1',account:'wang01',name:'王咨询师',intro:'情绪管理',password:'123456'},{id:'c2',account:'li01',name:'李咨询师',intro:'家庭关系',password:'123456'},{id:'c3',account:'zhang01',name:'张咨询师',intro:'职业规划',password:'123456'}]);
-  if(!localStorage.getItem(DBK.a)) ls(DBK.a, []);
-  if(!localStorage.getItem(DBK.p)) ls(DBK.p, []);
+  if(!localStorage.getItem(DBK.a)) ls(DBK.a, []); if(!localStorage.getItem(DBK.p)) ls(DBK.p, []);
 }
-
 var U=[], C=[], A=[], P=[], online=false;
 function loadLocal() { U=lg(DBK.u); C=lg(DBK.c); A=lg(DBK.a); P=lg(DBK.p); }
 function saveLocal() { ls(DBK.u,U); ls(DBK.c,C); ls(DBK.a,A); ls(DBK.p,P); }
-
-// 增量云端保存
 async function saveOne(collection, idField, item) {
   if(!online) return;
-  try {
-    var snap = await db.collection(collection).where(idField,'==',item[idField]).get();
-    if(!snap.empty) { await snap.docs[0].ref.update(item); }
-    else { await db.collection(collection).add(item); }
-    saveLocal();
-  } catch(e) { saveLocal(); }
+  try { var snap = await db.collection(collection).where(idField,'==',item[idField]).get(); if(!snap.empty) { await snap.docs[0].ref.update(item); } else { await db.collection(collection).add(item); } saveLocal(); } catch(e) { saveLocal(); }
 }
-async function deleteOne(collection, idField, idVal) {
-  if(!online) return;
-  try {
-    var snap = await db.collection(collection).where(idField,'==',idVal).get();
-    snap.docs.forEach(async function(d){ await d.ref.delete(); });
-    saveLocal();
-  } catch(e) {}
-}
+async function deleteOne(collection, idField, idVal) { if(!online) return; try { var snap = await db.collection(collection).where(idField,'==',idVal).get(); snap.docs.forEach(async function(d){ await d.ref.delete(); }); saveLocal(); } catch(e) {} }
 async function saveData() { saveLocal(); }
-
-// 加载云端
 async function loadCloud() {
-  var snap = await db.collection('users').get();
-  var rawU = snap.docs.map(function(d){ return {_id:d.id, data:d.data()}; });
-  var seen={}, uniqU=[], del=[];
-  rawU.forEach(function(x){ if(seen[x.data.username]){ del.push(db.collection('users').doc(x._id).delete()); } else { seen[x.data.username]=true; uniqU.push(x.data); } });
-  await Promise.all(del); U=uniqU;
-
-  snap = await db.collection('consultants').get();
-  var rawC = snap.docs.map(function(d){ return {_id:d.id, data:d.data()}; });
-  seen={}; var uniqC=[]; del=[];
-  rawC.forEach(function(x){ if(seen[x.data.id]){ del.push(db.collection('consultants').doc(x._id).delete()); } else { seen[x.data.id]=true; uniqC.push(x.data); } });
-  await Promise.all(del); C=uniqC;
-
-  snap = await db.collection('appointments').get();
-  var rawA = snap.docs.map(function(d){ return {_id:d.id, data:d.data()}; });
-  seen={}; var uniqA=[]; del=[];
-  rawA.forEach(function(x){ if(seen[x.data.id]){ del.push(db.collection('appointments').doc(x._id).delete()); } else { seen[x.data.id]=true; uniqA.push(x.data); } });
-  await Promise.all(del); A=uniqA;
-
-  snap = await db.collection('profiles').get();
-  var rawP = snap.docs.map(function(d){ return {_id:d.id, data:d.data()}; });
-  seen={}; var uniqP=[]; del=[];
-  rawP.forEach(function(x){ if(seen[x.data.id]){ del.push(db.collection('profiles').doc(x._id).delete()); } else { seen[x.data.id]=true; uniqP.push(x.data); } });
-  await Promise.all(del); P=uniqP;
-
-  if(U.length===0) {
-    await db.collection('users').add({username:'user1',password:'123456',remaining:5});
-    U=[{username:'user1',password:'123456',remaining:5}];
-  }
-  if(C.length===0) {
-    await db.collection('consultants').add({id:'c1',account:'wang01',name:'王咨询师',intro:'情绪管理',password:'123456'});
-    await db.collection('consultants').add({id:'c2',account:'li01',name:'李咨询师',intro:'家庭关系',password:'123456'});
-    await db.collection('consultants').add({id:'c3',account:'zhang01',name:'张咨询师',intro:'职业规划',password:'123456'});
-    C=[{id:'c1',account:'wang01',name:'王咨询师',intro:'情绪管理',password:'123456'},{id:'c2',account:'li01',name:'李咨询师',intro:'家庭关系',password:'123456'},{id:'c3',account:'zhang01',name:'张咨询师',intro:'职业规划',password:'123456'}];
-  }
+  var snap = await db.collection('users').get(); var rawU = snap.docs.map(function(d){ return {_id:d.id, data:d.data()}; }); var seen={}, uniqU=[], del=[]; rawU.forEach(function(x){ if(seen[x.data.username]){ del.push(db.collection('users').doc(x._id).delete()); } else { seen[x.data.username]=true; uniqU.push(x.data); } }); await Promise.all(del); U=uniqU;
+  snap = await db.collection('consultants').get(); var rawC = snap.docs.map(function(d){ return {_id:d.id, data:d.data()}; }); seen={}; var uniqC=[]; del=[]; rawC.forEach(function(x){ if(seen[x.data.id]){ del.push(db.collection('consultants').doc(x._id).delete()); } else { seen[x.data.id]=true; uniqC.push(x.data); } }); await Promise.all(del); C=uniqC;
+  snap = await db.collection('appointments').get(); var rawA = snap.docs.map(function(d){ return {_id:d.id, data:d.data()}; }); seen={}; var uniqA=[]; del=[]; rawA.forEach(function(x){ if(seen[x.data.id]){ del.push(db.collection('appointments').doc(x._id).delete()); } else { seen[x.data.id]=true; uniqA.push(x.data); } }); await Promise.all(del); A=uniqA;
+  snap = await db.collection('profiles').get(); var rawP = snap.docs.map(function(d){ return {_id:d.id, data:d.data()}; }); seen={}; var uniqP=[]; del=[]; rawP.forEach(function(x){ if(seen[x.data.id]){ del.push(db.collection('profiles').doc(x._id).delete()); } else { seen[x.data.id]=true; uniqP.push(x.data); } }); await Promise.all(del); P=uniqP;
+  if(U.length===0) { await db.collection('users').add({username:'user1',password:'123456',remaining:5}); U=[{username:'user1',password:'123456',remaining:5}]; }
+  if(C.length===0) { await db.collection('consultants').add({id:'c1',account:'wang01',name:'王咨询师',intro:'情绪管理',password:'123456'}); await db.collection('consultants').add({id:'c2',account:'li01',name:'李咨询师',intro:'家庭关系',password:'123456'}); await db.collection('consultants').add({id:'c3',account:'zhang01',name:'张咨询师',intro:'职业规划',password:'123456'}); C=[{id:'c1',account:'wang01',name:'王咨询师',intro:'情绪管理',password:'123456'},{id:'c2',account:'li01',name:'李咨询师',intro:'家庭关系',password:'123456'},{id:'c3',account:'zhang01',name:'张咨询师',intro:'职业规划',password:'123456'}]; }
   saveLocal();
 }
-
-// 工具
 function toast(m, t) { var c=document.getElementById('toastContainer'); var d=document.createElement('div'); d.className='toast '+(t||''); d.textContent=m; c.appendChild(d); setTimeout(function(){ if(d.parentNode)d.remove(); },2200); }
 function fmtDate(d) { if(!d)return ''; var dt=new Date(d+'T00:00:00'); var w=['周日','周一','周二','周三','周四','周五','周六']; return (dt.getMonth()+1)+'月'+dt.getDate()+'日 <span class="weekday">'+w[dt.getDay()]+'</span>'; }
 function today() { return new Date().toISOString().split('T')[0]; }
@@ -190,41 +135,34 @@ function autoDone() { var n=new Date(), td=today(), ch=false; A=A.map(function(a
 function retRem(u) { var idx=U.findIndex(function(x){return x.username===u;}); if(idx!==-1){ U[idx].remaining++; saveOne('users','username',U[idx]); return true; } return false; }
 function decRem(u) { var idx=U.findIndex(function(x){return x.username===u;}); if(idx!==-1&&U[idx].remaining>0){ U[idx].remaining--; saveOne('users','username',U[idx]); return true; } return false; }
 function profOpts(profs,sel) { var h='<option value="">选择档案(可选)</option>'; profs.forEach(function(p){ h+='<option value="'+p.id+'" '+(p.id===sel?'selected':'')+'>'+p.name+' '+p.phone+'</option>'; }); h+='<option value="__new__" style="color:#667eea;font-weight:600;">➕ 新增档案...</option>'; return h; }
-
 var CUR='pc'; function getCur() { return JSON.parse(localStorage.getItem(CUR)); } function setCur(v) { localStorage.setItem(CUR,JSON.stringify(v)); } function logout() { localStorage.removeItem(CUR); renderLogin(); }
 var DR='pd'; function saveDraft(d) { localStorage.setItem(DR,JSON.stringify(d)); } function getDraft() { return JSON.parse(localStorage.getItem(DR)||'{}'); } function clearDraft() { localStorage.removeItem(DR); }
 function updateSyncStatus() { var el=document.getElementById('syncStatus'); if(el){ el.className='sync-status'+(online?'':' offline'); el.innerHTML=online?'🟢 云端同步':'🔴 离线模式'; } }
 
-// 登录
 function renderLogin() {
   appEl.innerHTML = '<div style="text-align:center;margin-top:16px;"><h2>🧠 心理咨询预约系统</h2><p style="color:#64748b;font-size:0.9rem;">'+(online?'云端数据 · 多设备同步':'离线模式')+'</p></div><input id="lu" placeholder="用户名"><input id="lp" type="password" placeholder="密码"><button class="btn-primary" id="loginBtn">登 录</button><p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin-top:10px;">我们共同成长</p>';
   document.getElementById('loginBtn').onclick = function() {
     var u=document.getElementById('lu').value.trim(), p=document.getElementById('lp').value.trim();
-    if(!u||!p){toast('请输入用户名和密码','warning');return;}
-    if(u==='admin'&&p==='admin123'){setCur({role:'admin'});renderAdmin();return;}
-    var c=C.find(function(x){return x.account===u&&x.password===p;});
-    if(c){setCur({role:'consultant',id:c.id,name:c.name});renderConsultant();return;}
-    var us=U.find(function(x){return x.username===u&&x.password===p;});
-    if(us){setCur({role:'visitor',username:us.username});renderVisitor();return;}
+    if(!u||!p){toast('请输入用户名和密码','warning');return;} if(u==='admin'&&p==='admin123'){setCur({role:'admin'});renderAdmin();return;}
+    var c=C.find(function(x){return x.account===u&&x.password===p;}); if(c){setCur({role:'consultant',id:c.id,name:c.name});renderConsultant();return;}
+    var us=U.find(function(x){return x.username===u&&x.password===p;}); if(us){setCur({role:'visitor',username:us.username});renderVisitor();return;}
     toast('账号或密码错误','error');
   };
 }
 
-// 来访者
 function renderVisitor() {
   autoDone(); var cu=getCur(); var us=U.find(function(u){return u.username===cu.username;}); if(!us){logout();return;}
-  var profs=P.filter(function(p){return p.owner===cu.username;});
-  var myApps=A.filter(function(a){return a.visitor===cu.username;});
+  var profs=P.filter(function(p){return p.owner===cu.username;}); var myApps=A.filter(function(a){return a.visitor===cu.username;});
   var draft=getDraft(); var sd=draft.date||today(), sc=draft.consultantId||'', st=draft.time||'', sn=draft.note||'', sp=draft.profileId||(profs.length===1?profs[0].id:'');
   appEl.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;"><h2>📅 我的预约</h2><span class="role-badge">剩余'+us.remaining+'次</span></div><span class="sync-status" id="syncStatus">'+(online?'🟢 云端同步':'🔴 离线模式')+'</span><div class="card"><h3>新建预约</h3><input type="date" id="ad" min="'+today()+'" value="'+sd+'"><select id="at"><option value="">选时段</option>'+slots(sd).map(function(x){return '<option value="'+x.v+'" '+(x.v===st?'selected':'')+'>'+x.l+'</option>';}).join('')+'</select><select id="ac"><option value="">选咨询师</option>'+C.map(function(x){return '<option value="'+x.id+'" '+(x.id===sc?'selected':'')+'>'+x.name+'</option>';}).join('')+'</select><div class="inline-group"><select id="ap" style="flex:1;">'+profOpts(profs,sp)+'</select></div><textarea id="an" placeholder="备注" rows="2">'+sn+'</textarea><button class="btn-primary" id="submit" '+(us.remaining<=0?'disabled':'')+'>'+(us.remaining<=0?'次数用完':'✅ 确认预约')+'</button></div><h3>待咨询</h3><div id="waitList" class="grid-list"></div><div class="btn-group"><button class="btn-gray" id="recBtn">记录</button><button class="btn-gray" id="profBtn">档案</button><button class="btn-gray" id="ctrBtn">个人</button></div><button class="btn-danger" id="outBtn">退出</button>';
   function scd(){ saveDraft({date:document.getElementById('ad').value,time:document.getElementById('at').value,consultantId:document.getElementById('ac').value,profileId:document.getElementById('ap').value,note:document.getElementById('an').value}); }
   document.getElementById('ad').onchange=function(){document.getElementById('at').innerHTML='<option>选时段</option>'+slots(this.value).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('');scd();};
   document.getElementById('at').onchange=scd; document.getElementById('ac').onchange=scd; document.getElementById('an').oninput=scd;
   document.getElementById('ap').onchange=function(){if(this.value==='__new__'){scd();renderProfileManager();}else scd();};
-  var waitApps=myApps.filter(function(a){return a.status==='wait';});
+  var waitApps=myApps.filter(function(a){return a.status==='wait';}); waitApps.sort(function(a,b){return b.id-a.id;});
   document.getElementById('waitList').innerHTML=waitApps.length===0?'<p style="color:#94a3b8;text-align:center;padding:16px;">暂无待咨询预约</p>':waitApps.map(function(a){var c=C.find(function(x){return x.id===a.consultantId;});return '<div class="appointment-row"><div class="row-top"><div><span class="date-display">'+fmtDate(a.date)+'</span><div class="time-range">'+a.time+'-'+endTime(a.time)+'</div></div><span class="status-badge wait">待咨询</span></div><div>'+(c?c.name:'')+' | '+(a.profileName||'')+'</div><button class="btn-gray" onclick="reschedule(\''+a.id+'\')">✏️ 改签</button></div>';}).join('');
   document.getElementById('submit').onclick=function(){ var d=document.getElementById('ad').value,t=document.getElementById('at').value,cid=document.getElementById('ac').value,pid=document.getElementById('ap').value,note=document.getElementById('an').value; if(!d||!t||!cid){toast('请填写完整','warning');return;} if(conflict(cid,d,t)){toast('时段冲突','error');return;} var p=profs.find(function(x){return x.id===pid;}); var app={id:Date.now().toString(),visitor:cu.username,consultantId:cid,date:d,time:t,profileName:p?p.name+' '+p.phone:'',note:note,status:'wait'}; A.push(app); saveOne('appointments','id',app); decRem(cu.username); clearDraft(); toast('预约成功','success'); renderVisitor(); };
-  document.getElementById('recBtn').onclick=function(){ var apps=A.filter(function(a){return a.visitor===cu.username;}); appEl.innerHTML='<h2>📋 记录</h2><div class="grid-list">'+apps.map(function(a){var c=C.find(function(x){return x.id===a.consultantId;});return '<div class="appointment-row"><div class="row-top"><div><span class="date-display">'+fmtDate(a.date)+'</span><div class="time-range">'+a.time+'-'+endTime(a.time)+'</div></div><span class="status-badge '+a.status+'">'+(a.status==='wait'?'待':a.status==='finish'?'完':'取消')+'</span></div><div>'+(c?c.name:'')+' | '+(a.profileName||'')+'</div>'+(a.status==='wait'?'<button class="btn-danger" onclick="cancelApp(\''+a.id+'\')">取消(返还)</button>':'')+'</div>';}).join('')+'</div><button class="btn-gray" id="back">←返回</button>'; document.getElementById('back').onclick=renderVisitor; };
+  document.getElementById('recBtn').onclick=function(){ var apps=A.filter(function(a){return a.visitor===cu.username;}); apps.sort(function(a,b){return b.id-a.id;}); appEl.innerHTML='<h2>📋 记录</h2><div class="grid-list">'+apps.map(function(a){var c=C.find(function(x){return x.id===a.consultantId;});return '<div class="appointment-row"><div class="row-top"><div><span class="date-display">'+fmtDate(a.date)+'</span><div class="time-range">'+a.time+'-'+endTime(a.time)+'</div></div><span class="status-badge '+a.status+'">'+(a.status==='wait'?'待':a.status==='finish'?'完':'取消')+'</span></div><div>'+(c?c.name:'')+' | '+(a.profileName||'')+'</div>'+(a.status==='wait'?'<button class="btn-danger" onclick="cancelApp(\''+a.id+'\')">取消(返还)</button>':'')+'</div>';}).join('')+'</div><button class="btn-gray" id="back">←返回</button>'; document.getElementById('back').onclick=renderVisitor; };
   document.getElementById('profBtn').onclick=function(){scd();renderProfileManager();};
   document.getElementById('ctrBtn').onclick=function(){ appEl.innerHTML='<h2>⚙️ 个人</h2><div class="card"><p>'+us.username+' 剩余'+us.remaining+'次</p></div><button class="btn-primary" id="chPwd">修改密码</button><button class="btn-gray" id="back">←返回</button>'; document.getElementById('chPwd').onclick=function(){ var old=prompt('旧密码'); if(old!==us.password){toast('错误','error');return;} var n1=prompt('新密码'); if(!n1||n1.length<4){toast('至少4位','warning');return;} us.password=n1; saveOne('users','username',us); toast('修改成功','success'); logout(); }; document.getElementById('back').onclick=renderVisitor; };
   document.getElementById('outBtn').onclick=function(){clearDraft();logout();};
@@ -237,35 +175,71 @@ function renderProfileManager() {
   document.getElementById('addP').onclick=function(){ var n=document.getElementById('pName').value.trim(), ph=document.getElementById('pPhone').value.trim(); if(!n||!ph){toast('必填','warning');return;} var np={id:Date.now().toString(),owner:cu.username,name:n,phone:ph}; P.push(np); saveOne('profiles','id',np); document.getElementById('pName').value=''; document.getElementById('pPhone').value=''; toast('新增成功','success'); renderProfileManager(); };
   document.getElementById('back').onclick=renderVisitor;
 }
-
 window.reschedule=function(id){ var app=A.find(function(a){return a.id===id;}); var cu=getCur(); var profs=P.filter(function(p){return p.owner===cu.username;}); var modal=document.createElement('div'); modal.className='modal'; modal.innerHTML='<div class="modal-content"><h3>改签</h3><input type="date" id="rd" value="'+app.date+'" min="'+today()+'"><select id="rt">'+slots(app.date).map(function(x){return '<option value="'+x.v+'" '+(x.v===app.time?'selected':'')+'>'+x.l+'</option>';}).join('')+'</select><select id="rc">'+C.map(function(x){return '<option value="'+x.id+'" '+(x.id===app.consultantId?'selected':'')+'>'+x.name+'</option>';}).join('')+'</select><select id="rp">'+profOpts(profs)+'</select><textarea id="rn">'+(app.note||'')+'</textarea><div class="btn-group"><button class="btn-primary" id="sv">保存</button><button class="btn-gray" id="cl">取消</button></div></div>'; document.body.appendChild(modal); document.getElementById('rd').onchange=function(){document.getElementById('rt').innerHTML=slots(this.value).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('');}; document.getElementById('cl').onclick=function(){modal.remove();}; document.getElementById('sv').onclick=function(){ var nd=document.getElementById('rd').value,nt=document.getElementById('rt').value,nc=document.getElementById('rc').value; if(!nd||!nt||!nc){toast('填写完整','warning');return;} if(conflict(nc,nd,nt,id)){toast('冲突','error');return;} var idx=A.findIndex(function(a){return a.id===id;}); A[idx].date=nd; A[idx].time=nt; A[idx].consultantId=nc; A[idx].note=document.getElementById('rn').value; saveOne('appointments','id',A[idx]); modal.remove(); toast('改签成功','success'); renderVisitor(); }; };
 window.cancelApp=function(id){ if(!confirm('确定取消？返还次数。'))return; var a=A.find(function(x){return x.id===id;}); if(a&&a.status==='wait'){a.status='cancel'; saveOne('appointments','id',a); retRem(a.visitor); toast('已取消','success');} renderVisitor(); };
 window.editProf=function(id){ var p=P.find(function(x){return x.id===id;}); var nn=prompt('姓名',p.name); if(nn===null)return; var np=prompt('手机',p.phone); if(np===null)return; p.name=nn; p.phone=np; saveOne('profiles','id',p); toast('修改成功','success'); renderProfileManager(); };
 window.delProf=function(id){ if(!confirm('删除？'))return; P=P.filter(function(x){return x.id!==id;}); deleteOne('profiles','id',id); toast('已删除','success'); renderProfileManager(); };
 
-// 咨询师
 function renderConsultant() {
-  autoDone(); var cu=getCur(); var apps=A.filter(function(a){return a.consultantId===cu.id;});
-  appEl.innerHTML='<div style="display:flex;justify-content:space-between;"><h2>📋 工作台</h2><span class="role-badge">'+cu.name+'</span></div><span class="sync-status" id="syncStatus">'+(online?'🟢 云端同步':'🔴 离线模式')+'</span><h3>我的预约</h3><div class="grid-list">'+(apps.length===0?'<p style="color:#94a3b8;text-align:center;padding:16px;">暂无</p>':apps.map(function(a){return '<div class="appointment-row"><div class="row-top"><div><span class="date-display">'+fmtDate(a.date)+'</span><div class="time-range">'+a.time+'-'+endTime(a.time)+'</div></div><span class="status-badge '+a.status+'">'+(a.status==='wait'?'待':a.status==='finish'?'完':'取消')+'</span></div><div>'+(a.profileName||a.visitor)+'</div><div class="btn-group"><button class="btn-gray" onclick="ce(\''+a.id+'\')">✏️</button>'+(a.status==='wait'?'<button class="btn-primary" onclick="cd(\''+a.id+'\')">✅</button>':'')+'</div></div>';}).join(''))+'</div><div class="section-divider"></div><div class="card"><h3>代预约</h3><select id="cv"><option value="">选来访者</option>'+U.map(function(u){return '<option value="'+u.username+'">'+u.username+'('+u.remaining+'次)</option>';}).join('')+'</select><input type="date" id="cdd" min="'+today()+'" value="'+today()+'"><select id="ct"><option value="">选时段</option>'+slots(today()).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('')+'</select><div class="inline-group"><select id="cp" style="flex:1;"><option value="">选档案</option></select></div><textarea id="cnote" placeholder="备注" rows="2"></textarea><button class="btn-primary" id="cs">✅ 创建</button></div><button class="btn-primary" id="chp">🔑 修改密码</button><button class="btn-danger" id="lo">退出</button>';
-  document.getElementById('cdd').onchange=function(){document.getElementById('ct').innerHTML='<option>选时段</option>'+slots(this.value).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('');};
+  autoDone(); var cu=getCur(); var apps=A.filter(function(a){return a.consultantId===cu.id;}); apps.sort(function(a,b){return b.id-a.id;});
+  var td=today(); var now=new Date(); var weekStart=new Date(now); weekStart.setDate(now.getDate()-now.getDay()); var ws=weekStart.toISOString().split('T')[0];
+  var monthStart=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
+
+  appEl.innerHTML='<div style="display:flex;justify-content:space-between;"><h2>📋 工作台</h2><span class="role-badge">'+cu.name+'</span></div><span class="sync-status" id="syncStatus">'+(online?'🟢 云端同步':'🔴 离线模式')+'</span>'+
+    '<div class="tab-bar"><button class="tab-btn active" id="ctabToday">📅 今日</button><button class="tab-btn" id="ctabWeek">📆 本周</button><button class="tab-btn" id="ctabMonth">🗓️ 本月</button><button class="tab-btn" id="ctabAll">📋 全部</button></div>'+
+    '<div class="filter-row"><select id="cfs"><option value="">全部状态</option><option value="wait">待咨询</option><option value="finish">已完成</option><option value="cancel">已取消</option></select></div>'+
+    '<div id="clist" class="grid-list"></div>'+
+    '<div class="section-divider"></div>'+
+    '<div class="card"><h3>➕ 代预约</h3><select id="cv"><option value="">选来访者</option>'+U.map(function(u){return '<option value="'+u.username+'">'+u.username+'('+u.remaining+'次)</option>';}).join('')+'</select><input type="date" id="cdd" min="'+td+'" value="'+td+'"><select id="ct"><option value="">选时段</option>'+slots(td).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('')+'</select><div class="inline-group"><select id="cp" style="flex:1;"><option value="">选档案</option></select></div><textarea id="cnote" placeholder="备注" rows="2"></textarea><button class="btn-primary" id="cs">✅ 创建预约</button></div>'+
+    '<button class="btn-primary" id="chp">🔑 修改密码</button><button class="btn-danger" id="lo">退出</button>';
+
+  var currentTab='today';
+  function getFiltered(){ var s=document.getElementById('cfs').value; var f=apps.slice(); if(currentTab==='today'){f=f.filter(function(a){return a.date===td;});} else if(currentTab==='week'){f=f.filter(function(a){return a.date>=ws&&a.date<=td;});} else if(currentTab==='month'){f=f.filter(function(a){return a.date>=monthStart&&a.date<=td;});} if(s){f=f.filter(function(a){return a.status===s;});} f.sort(function(a,b){return b.id-a.id;}); return f; }
+  function rfl(){ var f=getFiltered(); document.getElementById('clist').innerHTML=f.length===0?'<p style="color:#94a3b8;text-align:center;padding:16px;">暂无预约记录</p>':f.map(function(a){return '<div class="appointment-row"><div class="row-top"><div><span class="date-display">'+fmtDate(a.date)+'</span><div class="time-range">'+a.time+'-'+endTime(a.time)+'</div></div><span class="status-badge '+a.status+'">'+(a.status==='wait'?'待咨询':a.status==='finish'?'已完成':'已取消')+'</span></div><div>'+(a.profileName||a.visitor)+'</div><div class="btn-group"><button class="btn-gray btn-sm" onclick="ce(\''+a.id+'\')">✏️编辑</button>'+(a.status==='wait'?'<button class="btn-primary btn-sm" onclick="cd(\''+a.id+'\')">✅完成</button>':'')+'</div></div>';}).join(''); }
+  document.getElementById('ctabToday').onclick=function(){currentTab='today';var tabs=document.querySelectorAll('.tab-btn');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');this.classList.add('active');rfl();};
+  document.getElementById('ctabWeek').onclick=function(){currentTab='week';var tabs=document.querySelectorAll('.tab-btn');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');this.classList.add('active');rfl();};
+  document.getElementById('ctabMonth').onclick=function(){currentTab='month';var tabs=document.querySelectorAll('.tab-btn');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');this.classList.add('active');rfl();};
+  document.getElementById('ctabAll').onclick=function(){currentTab='all';var tabs=document.querySelectorAll('.tab-btn');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');this.classList.add('active');rfl();};
+  document.getElementById('cfs').onchange=rfl;
+  document.getElementById('cdd').onchange=function(){document.getElementById('ct').innerHTML='<option value="">选时段</option>'+slots(this.value).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('');};
   document.getElementById('cv').onchange=function(){var pf=P.filter(function(p){return p.owner===this.value;}.bind(this));document.getElementById('cp').innerHTML='<option value="">选档案</option>'+pf.map(function(p){return '<option value="'+p.id+'">'+p.name+' '+p.phone+'</option>';}).join('');};
   document.getElementById('cs').onclick=function(){var v=document.getElementById('cv').value,d=document.getElementById('cdd').value,t=document.getElementById('ct').value;if(!v||!d||!t){toast('填写完整','warning');return;}if(conflict(cu.id,d,t)){toast('冲突','error');return;}var u=U.find(function(x){return x.username===v;});if(!u||u.remaining<=0){toast('次数不足','error');return;}var app={id:Date.now().toString(),visitor:v,consultantId:cu.id,date:d,time:t,profileName:'',note:document.getElementById('cnote').value,status:'wait'};A.push(app);saveOne('appointments','id',app);decRem(v);toast('创建成功','success');renderConsultant();};
   document.getElementById('chp').onclick=function(){var c=C.find(function(x){return x.id===cu.id;});var old=prompt('旧密码');if(old!==c.password){toast('错误','error');return;}var n=prompt('新密码');if(!n||n.length<4){toast('至少4位','warning');return;}c.password=n;saveOne('consultants','id',c);toast('修改成功','success');logout();};
   document.getElementById('lo').onclick=logout;
+  rfl();
 }
 window.ce=function(id){var app=A.find(function(a){return a.id===id;});var modal=document.createElement('div');modal.className='modal';modal.innerHTML='<div class="modal-content"><h3>修改</h3><p>'+fmtDate(app.date)+' '+app.time+'-'+endTime(app.time)+'</p><textarea id="cen">'+(app.note||'')+'</textarea><select id="ces"><option value="wait" '+(app.status==='wait'?'selected':'')+'>待</option><option value="finish">完</option><option value="cancel">取消</option></select><p style="color:#dc2626;font-size:0.8rem;">取消返还1次</p><div class="btn-group"><button class="btn-primary" id="cesv">保存</button><button class="btn-gray" id="cecl">取消</button></div></div>';document.body.appendChild(modal);document.getElementById('cecl').onclick=function(){modal.remove();};document.getElementById('cesv').onclick=function(){var old=app.status,nw=document.getElementById('ces').value;app.status=nw;app.note=document.getElementById('cen').value;saveOne('appointments','id',app);if(old==='wait'&&nw==='cancel'){retRem(app.visitor);toast('已取消返还','success');}modal.remove();renderConsultant();};};
 window.cd=function(id){if(!confirm('标记完成？'))return;var a=A.find(function(x){return x.id===id;});if(a){a.status='finish';saveOne('appointments','id',a);toast('已完成','success');renderConsultant();}};
 
-// 管理员
 function renderAdmin() {
   appEl.innerHTML='<h2>⚙️ 管理员</h2><span class="sync-status" id="syncStatus">'+(online?'🟢 云端同步':'🔴 离线模式')+'</span><button class="btn-primary" id="ub">👥 来访者管理</button><button class="btn-primary" id="cb">🩺 咨询师管理</button><button class="btn-primary" id="ab">📝 预约管理</button><button class="btn-primary" id="alb">📊 全部预约</button><button class="btn-danger" id="lo">退出</button>';
   document.getElementById('ub').onclick=function(){appEl.innerHTML='<h2>👥 来访者</h2><div class="card"><input id="nu" placeholder="用户名"><input id="np" placeholder="密码"><input id="nt" type="number" value="5"><button class="btn-primary" id="addU">新增</button></div><div class="admin-table"><div class="table-header"><span>用户名</span><span>密码</span><span>次数</span><span>操作</span></div>'+U.map(function(u){return '<div class="table-row"><span>'+u.username+'</span><span>'+u.password+'</span><span>'+u.remaining+'</span><span><button class="btn-gray" onclick="eu(\''+u.username+'\')">编辑</button><button class="btn-danger" onclick="du(\''+u.username+'\')">删除</button></span></div>';}).join('')+'</div><button class="btn-gray" id="back">←返回</button>';document.getElementById('addU').onclick=function(){var un=document.getElementById('nu').value.trim();if(!un||U.find(function(u){return u.username===un;})){toast('无效','warning');return;}var nu={username:un,password:document.getElementById('np').value,remaining:parseInt(document.getElementById('nt').value)||0};U.push(nu);saveOne('users','username',nu);toast('创建成功','success');document.getElementById('ub').onclick();};document.getElementById('back').onclick=renderAdmin;};
   document.getElementById('cb').onclick=function(){appEl.innerHTML='<h2>🩺 咨询师</h2><div class="card"><input id="ca" placeholder="账号"><input id="cn" placeholder="姓名"><input id="cpass" placeholder="密码"><button class="btn-primary" id="addC">新增</button></div>'+C.map(function(c){return '<div class="appointment-row"><b>'+c.name+'</b>('+c.account+') 密码:'+c.password+'<div class="btn-group"><button class="btn-gray" onclick="ec(\''+c.id+'\')">编辑</button><button class="btn-danger" onclick="dc(\''+c.id+'\')">删除</button></div></div>';}).join('')+'<button class="btn-gray" id="back">←返回</button>';document.getElementById('addC').onclick=function(){var a=document.getElementById('ca').value.trim(),n=document.getElementById('cn').value.trim();if(!a||!n||C.find(function(c){return c.account===a;})){toast('无效','warning');return;}var nc={id:Date.now().toString(),account:a,name:n,password:document.getElementById('cpass').value||'123456'};C.push(nc);saveOne('consultants','id',nc);toast('添加成功','success');document.getElementById('cb').onclick();};document.getElementById('back').onclick=renderAdmin;};
-  document.getElementById('ab').onclick=function(){appEl.innerHTML='<h2>📝 预约管理</h2><h3>全部预约</h3><div class="filter-row"><select id="afs"><option value="">全部</option><option value="wait">待</option><option value="finish">完</option><option value="cancel">取消</option></select></div><div id="alist" class="grid-list"></div><div class="section-divider"></div><div class="card"><h3>新建</h3><select id="av"><option value="">来访者</option>'+U.map(function(u){return '<option value="'+u.username+'">'+u.username+'('+u.remaining+'次)</option>';}).join('')+'</select><select id="acn"><option value="">咨询师</option>'+C.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('')+'</select><input type="date" id="addt" min="'+today()+'" value="'+today()+'"><select id="atm"><option value="">时段</option>'+slots(today()).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('')+'</select><button class="btn-primary" id="asub">✅ 创建</button></div><button class="btn-gray" id="back">←返回</button>';function rfl(){var s=document.getElementById('afs').value;var f=A.filter(function(a){return s?a.status===s:true;});document.getElementById('alist').innerHTML=f.map(function(a){var co=C.find(function(x){return x.id===a.consultantId;});return '<div class="appointment-row"><div class="row-top"><div><span class="date-display">'+fmtDate(a.date)+'</span><div class="time-range">'+a.time+'-'+endTime(a.time)+'</div></div><span class="status-badge '+a.status+'">'+(a.status==='wait'?'待':a.status==='finish'?'完':'取消')+'</span></div><div>'+(a.profileName||a.visitor)+' | 咨询师: '+(co?co.name:'')+'</div><div class="btn-group"><button class="btn-gray" onclick="ae(\''+a.id+'\')">编辑</button>'+(a.status==='wait'?'<button class="btn-primary" onclick="af(\''+a.id+'\')">完成</button><button class="btn-danger" onclick="acx(\''+a.id+'\')">取消</button>':'')+'</div></div>';}).join('')||'<p style="color:#94a3b8;text-align:center;padding:16px;">暂无</p>';}document.getElementById('afs').onchange=rfl;rfl();document.getElementById('addt').onchange=function(){document.getElementById('atm').innerHTML='<option>时段</option>'+slots(this.value).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('');};document.getElementById('asub').onclick=function(){var v=document.getElementById('av').value,cid=document.getElementById('acn').value,d=document.getElementById('addt').value,t=document.getElementById('atm').value;if(!v||!cid||!d||!t){toast('填写完整','warning');return;}if(conflict(cid,d,t)){toast('冲突','error');return;}var u=U.find(function(x){return x.username===v;});if(!u||u.remaining<=0){toast('次数不足','error');return;}var app={id:Date.now().toString(),visitor:v,consultantId:cid,date:d,time:t,profileName:'',note:'',status:'wait'};A.push(app);saveOne('appointments','id',app);decRem(v);toast('创建成功','success');document.getElementById('ab').onclick();};document.getElementById('back').onclick=renderAdmin;};
-  document.getElementById('alb').onclick=function(){var wc=A.filter(function(a){return a.status==='wait';}).length,fc=A.filter(function(a){return a.status==='finish';}).length,cc=A.filter(function(a){return a.status==='cancel';}).length;appEl.innerHTML='<h2>📊 全部预约</h2><div class="card" style="padding:10px 14px;">总计 <b>'+A.length+'</b> 条 <span class="stat-badge stat-wait">待 '+wc+'</span><span class="stat-badge stat-finish">完 '+fc+'</span><span class="stat-badge stat-cancel">取消 '+cc+'</span></div><div class="card"><h3>🔍 筛选</h3><div class="filter-row"><select id="afu"><option value="">全部来访者</option>'+U.map(function(u){return '<option value="'+u.username+'">'+u.username+'</option>';}).join('')+'</select><select id="afco"><option value="">全部咨询师</option>'+C.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('')+'</select></div><div class="filter-row"><select id="afs2"><option value="">全部状态</option><option value="wait">待</option><option value="finish">完</option><option value="cancel">取消</option></select></div><div class="filter-row"><div class="custom-date-wrap"><input type="date" id="afdf"><span class="custom-date-placeholder">📅 开始日期</span></div><div class="custom-date-wrap"><input type="date" id="afdt"><span class="custom-date-placeholder">📅 结束日期</span></div></div><div class="btn-group"><button class="btn-gray btn-sm" id="afr">🔄 重置</button><button class="btn-success btn-sm" id="afe">📤 导出</button></div></div><div id="afl" class="grid-list"></div><button class="btn-gray" id="back">←返回</button>';function sd(id){var inp=document.getElementById(id);var ph=inp.parentElement.querySelector('.custom-date-placeholder');inp.addEventListener('change',function(){ph.style.opacity=this.value?'0':'1';});inp.addEventListener('focus',function(){ph.style.opacity='0';});inp.addEventListener('blur',function(){if(!this.value)ph.style.opacity='1';});if(!inp.value)ph.style.opacity='1';}sd('afdf');sd('afdt');function rf(){var u=document.getElementById('afu').value,c=document.getElementById('afco').value,s=document.getElementById('afs2').value,df=document.getElementById('afdf').value,dt=document.getElementById('afdt').value;var f=A.slice();if(u)f=f.filter(function(a){return a.visitor===u;});if(c)f=f.filter(function(a){return a.consultantId===c;});if(s)f=f.filter(function(a){return a.status===s;});if(df)f=f.filter(function(a){return a.date>=df;});if(dt)f=f.filter(function(a){return a.date<=dt;});document.getElementById('afl').innerHTML=f.map(function(a){var co=C.find(function(x){return x.id===a.consultantId;});return '<div class="appointment-row"><div class="row-top"><div><span class="date-display">'+fmtDate(a.date)+'</span><div class="time-range">'+a.time+'-'+endTime(a.time)+'</div></div><span class="status-badge '+a.status+'">'+(a.status==='wait'?'待':a.status==='finish'?'完':'取消')+'</span></div><div>'+(a.profileName||a.visitor)+' | 咨询师: '+(co?co.name:'')+'</div><div class="btn-group"><button class="btn-gray btn-sm" onclick="ae(\''+a.id+'\')">编辑</button>'+(a.status==='wait'?'<button class="btn-primary btn-sm" onclick="af(\''+a.id+'\')">完成</button><button class="btn-danger btn-sm" onclick="acx(\''+a.id+'\')">取消</button>':'')+'</div></div>';}).join('')||'<p style="color:#94a3b8;text-align:center;padding:16px;">无匹配</p>';}document.getElementById('afu').onchange=rf;document.getElementById('afco').onchange=rf;document.getElementById('afs2').onchange=rf;document.getElementById('afdf').onchange=rf;document.getElementById('afdt').onchange=rf;document.getElementById('afr').onclick=function(){document.getElementById('afu').value='';document.getElementById('afco').value='';document.getElementById('afs2').value='';document.getElementById('afdf').value='';document.getElementById('afdt').value='';var phs=document.querySelectorAll('.custom-date-placeholder');for(var i=0;i<phs.length;i++)phs[i].style.opacity='1';rf();};document.getElementById('afe').onclick=function(){var f=A.slice();var u=document.getElementById('afu').value,c=document.getElementById('afco').value,s=document.getElementById('afs2').value,df=document.getElementById('afdf').value,dt=document.getElementById('afdt').value;if(u)f=f.filter(function(a){return a.visitor===u;});if(c)f=f.filter(function(a){return a.consultantId===c;});if(s)f=f.filter(function(a){return a.status===s;});if(df)f=f.filter(function(a){return a.date>=df;});if(dt)f=f.filter(function(a){return a.date<=dt;});var data=f.map(function(a){var co=C.find(function(x){return x.id===a.consultantId;});return{日期:a.date,时段:a.time+'-'+endTime(a.time),来访者:a.visitor,咨询师:co?co.name:'',状态:a.status==='wait'?'待':a.status==='finish'?'完':'取消'};});var ws=XLSX.utils.json_to_sheet(data);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'全部预约');XLSX.writeFile(wb,'全部预约_'+today()+'.xlsx');toast('导出成功','success');};rf();document.getElementById('back').onclick=renderAdmin;};
+
+  document.getElementById('ab').onclick=function(){
+    var td=today(); var now=new Date(); var weekStart=new Date(now); weekStart.setDate(now.getDate()-now.getDay()); var ws=weekStart.toISOString().split('T')[0];
+    var monthStart=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
+    appEl.innerHTML='<h2>📝 预约管理</h2>'+
+      '<div class="tab-bar"><button class="tab-btn active" id="tabToday">📅 今日</button><button class="tab-btn" id="tabWeek">📆 本周</button><button class="tab-btn" id="tabMonth">🗓️ 本月</button></div>'+
+      '<div class="filter-row"><select id="afs"><option value="">全部状态</option><option value="wait">待咨询</option><option value="finish">已完成</option><option value="cancel">已取消</option></select></div>'+
+      '<div id="alist" class="grid-list"></div><div class="section-divider"></div>'+
+      '<div class="card"><h3>➕ 新建预约</h3><select id="av"><option value="">选择来访者</option>'+U.map(function(u){return '<option value="'+u.username+'">'+u.username+'('+u.remaining+'次)</option>';}).join('')+'</select><select id="acn"><option value="">选择咨询师</option>'+C.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('')+'</select><input type="date" id="addt" min="'+td+'" value="'+td+'"><select id="atm"><option value="">选择时段</option>'+slots(td).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('')+'</select><button class="btn-primary" id="asub">✅ 创建预约</button></div><button class="btn-gray" id="back">← 返回控制台</button>';
+    var currentTab='today';
+    function getFiltered(){ var s=document.getElementById('afs').value; var f=A.slice(); if(currentTab==='today'){f=f.filter(function(a){return a.date===td;});} else if(currentTab==='week'){f=f.filter(function(a){return a.date>=ws&&a.date<=td;});} else if(currentTab==='month'){f=f.filter(function(a){return a.date>=monthStart&&a.date<=td;});} if(s){f=f.filter(function(a){return a.status===s;});} f.sort(function(a,b){return b.id-a.id;}); return f; }
+    function rfl(){ var f=getFiltered(); document.getElementById('alist').innerHTML=f.length===0?'<p style="color:#94a3b8;text-align:center;padding:16px;">暂无预约记录</p>':f.map(function(a){var co=C.find(function(x){return x.id===a.consultantId;});return '<div class="appointment-row"><div class="row-top"><div><span class="date-display">'+fmtDate(a.date)+'</span><div class="time-range">'+a.time+'-'+endTime(a.time)+'</div></div><span class="status-badge '+a.status+'">'+(a.status==='wait'?'待咨询':a.status==='finish'?'已完成':'已取消')+'</span></div><div>'+(a.profileName||a.visitor)+' | 咨询师: '+(co?co.name:'')+'</div><div class="btn-group"><button class="btn-gray btn-sm" onclick="ae(\''+a.id+'\')">✏️编辑</button>'+(a.status==='wait'?'<button class="btn-primary btn-sm" onclick="af(\''+a.id+'\')">✅完成</button><button class="btn-danger btn-sm" onclick="acx(\''+a.id+'\')">❌取消</button>':'')+'</div></div>';}).join(''); }
+    document.getElementById('tabToday').onclick=function(){currentTab='today';document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});this.classList.add('active');rfl();};
+    document.getElementById('tabWeek').onclick=function(){currentTab='week';document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});this.classList.add('active');rfl();};
+    document.getElementById('tabMonth').onclick=function(){currentTab='month';document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});this.classList.add('active');rfl();};
+    document.getElementById('afs').onchange=rfl;
+    document.getElementById('addt').onchange=function(){document.getElementById('atm').innerHTML='<option value="">选择时段</option>'+slots(this.value).map(function(x){return '<option value="'+x.v+'">'+x.l+'</option>';}).join('');};
+    document.getElementById('asub').onclick=function(){var v=document.getElementById('av').value,cid=document.getElementById('acn').value,d=document.getElementById('addt').value,t=document.getElementById('atm').value;if(!v||!cid||!d||!t){toast('请填写完整的预约信息','warning');return;}if(conflict(cid,d,t)){toast('该时段已被预约','error');return;}var u=U.find(function(x){return x.username===v;});if(!u||u.remaining<=0){toast('来访者预约次数不足','error');return;}var app={id:Date.now().toString(),visitor:v,consultantId:cid,date:d,time:t,profileName:'',note:'',status:'wait'};A.push(app);saveOne('appointments','id',app);decRem(v);toast('预约创建成功','success');document.getElementById('ab').onclick();};
+    document.getElementById('back').onclick=renderAdmin; rfl();
+  };
+
+  document.getElementById('alb').onclick=function(){var wc=A.filter(function(a){return a.status==='wait';}).length,fc=A.filter(function(a){return a.status==='finish';}).length,cc=A.filter(function(a){return a.status==='cancel';}).length;appEl.innerHTML='<h2>📊 全部预约</h2><div class="card" style="padding:10px 14px;">总计 <b>'+A.length+'</b> 条 <span class="stat-badge stat-wait">待 '+wc+'</span><span class="stat-badge stat-finish">完 '+fc+'</span><span class="stat-badge stat-cancel">取消 '+cc+'</span></div><div class="card"><h3>🔍 筛选</h3><div class="filter-row"><select id="afu"><option value="">全部来访者</option>'+U.map(function(u){return '<option value="'+u.username+'">'+u.username+'</option>';}).join('')+'</select><select id="afco"><option value="">全部咨询师</option>'+C.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('')+'</select></div><div class="filter-row"><select id="afs2"><option value="">全部状态</option><option value="wait">待</option><option value="finish">完</option><option value="cancel">取消</option></select></div><div class="filter-row"><div class="custom-date-wrap"><input type="date" id="afdf"><span class="custom-date-placeholder">📅 开始日期</span></div><div class="custom-date-wrap"><input type="date" id="afdt"><span class="custom-date-placeholder">📅 结束日期</span></div></div><div class="btn-group"><button class="btn-gray btn-sm" id="afr">🔄 重置</button><button class="btn-success btn-sm" id="afe">📤 导出</button></div></div><div id="afl" class="grid-list"></div><button class="btn-gray" id="back">←返回</button>';function sd(id){var inp=document.getElementById(id);var ph=inp.parentElement.querySelector('.custom-date-placeholder');inp.addEventListener('change',function(){ph.style.opacity=this.value?'0':'1';});inp.addEventListener('focus',function(){ph.style.opacity='0';});inp.addEventListener('blur',function(){if(!this.value)ph.style.opacity='1';});if(!inp.value)ph.style.opacity='1';}sd('afdf');sd('afdt');function rf(){var u=document.getElementById('afu').value,c=document.getElementById('afco').value,s=document.getElementById('afs2').value,df=document.getElementById('afdf').value,dt=document.getElementById('afdt').value;var f=A.slice();if(u)f=f.filter(function(a){return a.visitor===u;});if(c)f=f.filter(function(a){return a.consultantId===c;});if(s)f=f.filter(function(a){return a.status===s;});if(df)f=f.filter(function(a){return a.date>=df;});if(dt)f=f.filter(function(a){return a.date<=dt;});f.sort(function(a,b){return b.id-a.id;});document.getElementById('afl').innerHTML=f.map(function(a){var co=C.find(function(x){return x.id===a.consultantId;});return '<div class="appointment-row"><div class="row-top"><div><span class="date-display">'+fmtDate(a.date)+'</span><div class="time-range">'+a.time+'-'+endTime(a.time)+'</div></div><span class="status-badge '+a.status+'">'+(a.status==='wait'?'待':a.status==='finish'?'完':'取消')+'</span></div><div>'+(a.profileName||a.visitor)+' | 咨询师: '+(co?co.name:'')+'</div><div class="btn-group"><button class="btn-gray btn-sm" onclick="ae(\''+a.id+'\')">编辑</button>'+(a.status==='wait'?'<button class="btn-primary btn-sm" onclick="af(\''+a.id+'\')">完成</button><button class="btn-danger btn-sm" onclick="acx(\''+a.id+'\')">取消</button>':'')+'</div></div>';}).join('')||'<p style="color:#94a3b8;text-align:center;padding:16px;">无匹配</p>';}document.getElementById('afu').onchange=rf;document.getElementById('afco').onchange=rf;document.getElementById('afs2').onchange=rf;document.getElementById('afdf').onchange=rf;document.getElementById('afdt').onchange=rf;document.getElementById('afr').onclick=function(){document.getElementById('afu').value='';document.getElementById('afco').value='';document.getElementById('afs2').value='';document.getElementById('afdf').value='';document.getElementById('afdt').value='';var phs=document.querySelectorAll('.custom-date-placeholder');for(var i=0;i<phs.length;i++)phs[i].style.opacity='1';rf();};document.getElementById('afe').onclick=function(){var f=A.slice();var u=document.getElementById('afu').value,c=document.getElementById('afco').value,s=document.getElementById('afs2').value,df=document.getElementById('afdf').value,dt=document.getElementById('afdt').value;if(u)f=f.filter(function(a){return a.visitor===u;});if(c)f=f.filter(function(a){return a.consultantId===c;});if(s)f=f.filter(function(a){return a.status===s;});if(df)f=f.filter(function(a){return a.date>=df;});if(dt)f=f.filter(function(a){return a.date<=dt;});var data=f.map(function(a){var co=C.find(function(x){return x.id===a.consultantId;});return{日期:a.date,时段:a.time+'-'+endTime(a.time),来访者:a.visitor,咨询师:co?co.name:'',状态:a.status==='wait'?'待':a.status==='finish'?'完':'取消'};});var ws=XLSX.utils.json_to_sheet(data);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'全部预约');XLSX.writeFile(wb,'全部预约_'+today()+'.xlsx');toast('导出成功','success');};rf();document.getElementById('back').onclick=renderAdmin;};
   document.getElementById('lo').onclick=logout;
 }
-window.eu=function(un){var u=U.find(function(x){return x.username===un;});var nt=prompt('修改剩余预约次数',u.remaining);if(nt===null)return;u.remaining=parseInt(nt)||0;saveOne('users','username',u);toast('修改成功','success');renderAdmin();};
+window.eu=function(un){var u=U.find(function(x){return x.username===un;});var modal=document.createElement('div');modal.className='modal';modal.innerHTML='<div class="modal-content"><h3>编辑来访者：'+un+'</h3><p style="color:#64748b;margin-bottom:8px;">修改剩余预约次数</p><input id="eut" type="number" value="'+u.remaining+'" min="0" style="font-size:1.2rem;text-align:center;"><div class="btn-group" style="margin-top:12px;"><button class="btn-primary" id="eus">保存</button><button class="btn-gray" id="euc">取消</button></div></div>';document.body.appendChild(modal);document.getElementById('euc').onclick=function(){modal.remove();};document.getElementById('eus').onclick=function(){var nt=parseInt(document.getElementById('eut').value)||0;u.remaining=nt;saveOne('users','username',u);modal.remove();toast('修改成功','success');renderAdmin();};};
 window.du=function(un){if(!confirm('删除？'))return;U=U.filter(function(u){return u.username!==un;});deleteOne('users','username',un);toast('已删除','success');renderAdmin();};
 window.ec=function(id){var c=C.find(function(x){return x.id===id;});var na=prompt('账号',c.account);if(na===null)return;var nn=prompt('姓名',c.name);if(nn===null)return;c.account=na;c.name=nn;saveOne('consultants','id',c);toast('修改成功','success');renderAdmin();};
 window.dc=function(id){if(!confirm('删除？'))return;C=C.filter(function(c){return c.id!==id;});deleteOne('consultants','id',id);toast('已删除','success');renderAdmin();};
@@ -273,20 +247,11 @@ window.ae=function(id){var a=A.find(function(x){return x.id===id;});var modal=do
 window.af=function(id){if(!confirm('标记完成？'))return;var a=A.find(function(x){return x.id===id;});if(a){a.status='finish';saveOne('appointments','id',a);toast('已完成','success');}if(document.getElementById('afl'))document.getElementById('alb').onclick();else document.getElementById('ab').onclick();};
 window.acx=function(id){if(!confirm('确定取消？返还次数。'))return;var a=A.find(function(x){return x.id===id;});if(a&&a.status==='wait'){a.status='cancel';saveOne('appointments','id',a);retRem(a.visitor);toast('已取消返还','success');}if(document.getElementById('afl'))document.getElementById('alb').onclick();else document.getElementById('ab').onclick();};
 
-// 启动
 async function startApp() {
-  showLoading('正在连接云端...');
-  initLocal(); loadLocal();
-  try {
-    await Promise.race([loadFirebaseSDK(), new Promise(function(_,reject){setTimeout(function(){reject(new Error('timeout'));},5000);})]);
-    firebase.initializeApp({apiKey:"AIzaSyANlkglFhrlWhucVOvsH-olqotoHN-E4NQ",authDomain:"psy-consulting.firebaseapp.com",projectId:"psy-consulting",storageBucket:"psy-consulting.firebasestorage.app",messagingSenderId:"132180312320",appId:"1:132180312320:web:443b75555c1b3c5c6cf3e5"});
-    db=firebase.firestore();
-    try { await loadCloud(); online=true; } catch(e) { loadLocal(); }
-  } catch(e) { loadLocal(); }
-  autoDone();
-  var cu=getCur();
-  if(cu){ if(cu.role==='visitor')renderVisitor(); else if(cu.role==='consultant')renderConsultant(); else if(cu.role==='admin')renderAdmin(); }
-  else { renderLogin(); }
+  showLoading('正在连接云端...'); initLocal(); loadLocal();
+  try { await Promise.race([loadFirebaseSDK(), new Promise(function(_,reject){setTimeout(function(){reject(new Error('timeout'));},5000);})]); firebase.initializeApp({apiKey:"AIzaSyANlkglFhrlWhucVOvsH-olqotoHN-E4NQ",authDomain:"psy-consulting.firebaseapp.com",projectId:"psy-consulting",storageBucket:"psy-consulting.firebasestorage.app",messagingSenderId:"132180312320",appId:"1:132180312320:web:443b75555c1b3c5c6cf3e5"}); db=firebase.firestore(); try { await loadCloud(); online=true; } catch(e) { loadLocal(); } } catch(e) { loadLocal(); }
+  autoDone(); var cu=getCur();
+  if(cu){ if(cu.role==='visitor')renderVisitor(); else if(cu.role==='consultant')renderConsultant(); else if(cu.role==='admin')renderAdmin(); } else { renderLogin(); }
 }
 startApp();
 </script>
